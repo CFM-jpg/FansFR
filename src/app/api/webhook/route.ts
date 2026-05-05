@@ -17,7 +17,7 @@ const supabase = createClient(
 );
 
 // Désactiver le body parsing de Next.js — Stripe a besoin du raw body pour vérifier la signature
-export const config = { api: { bodyParser: false } };
+export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   const sig = req.headers.get('stripe-signature');
