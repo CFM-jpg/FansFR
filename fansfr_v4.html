@@ -1,0 +1,2712 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FansFR</title>
+<!-- ===== SDKS ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #fafaf8;
+    --gold: #c9a84c;
+    --gold-light: #e8d5a3;
+    --anthracite: #2a2a2a;
+    --mid: #666;
+    --light: #e8e8e4;
+    --surface: #f4f4f0;
+    --danger: #c0392b;
+    --success: #2d7a4f;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--white);
+    color: var(--black);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 60px;
+    border-bottom: 1px solid #222;
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 900; letter-spacing: .08em;
+    color: var(--white);
+    cursor: pointer;
+  }
+  .nav-logo span { color: var(--gold); }
+  .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+  .nav-links button {
+    background: none; border: none; cursor: pointer;
+    color: #aaa; font-family: 'DM Sans', sans-serif;
+    font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+    transition: color .2s;
+    padding: 4px 0;
+  }
+  .nav-links button:hover, .nav-links button.active { color: var(--white); }
+  .nav-right { display: flex; gap: 1rem; align-items: center; }
+  .icon-btn {
+    background: none; border: none; cursor: pointer;
+    color: #aaa; font-size: 1.1rem; transition: color .2s; padding: 4px;
+    position: relative;
+  }
+  .icon-btn:hover { color: var(--white); }
+  .cart-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: var(--gold); color: var(--black);
+    width: 16px; height: 16px; border-radius: 50%;
+    font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-search {
+    background: #1a1a1a; border: 1px solid #333; border-radius: 20px;
+    padding: 6px 14px; color: var(--white); font-size: .8rem;
+    width: 180px; outline: none; transition: border-color .2s;
+  }
+  .nav-search:focus { border-color: var(--gold); }
+  .nav-search::placeholder { color: #555; }
+
+  /* PAGES */
+  .page { display: none; animation: fadeIn .3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== HOME PAGE ===== */
+  .hero {
+    background: var(--black);
+    min-height: 85vh;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; text-align: center;
+    padding: 4rem 2rem;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 60% 50%, #1a1508 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: .7rem; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 1.5rem;
+    animation: slideUp .6s ease both;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 900; color: var(--white);
+    line-height: 1; margin-bottom: 1rem;
+    animation: slideUp .6s .1s ease both;
+  }
+  .hero-title em { color: var(--gold); font-style: italic; }
+  .hero-sub {
+    font-size: 1rem; color: #888; max-width: 400px; margin: 0 auto 2.5rem;
+    font-weight: 300; line-height: 1.7;
+    animation: slideUp .6s .2s ease both;
+  }
+  .hero-cta {
+    display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    animation: slideUp .6s .3s ease both;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .btn-primary {
+    background: var(--gold); color: var(--black);
+    border: none; padding: .75rem 2rem; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: .8rem;
+    font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+    transition: all .2s; border-radius: 2px;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-outline {
+    background: none; color: var(--white);
+    border: 1px solid #444; padding: .75rem 2rem; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: .8rem;
+    font-weight: 400; letter-spacing: .12em; text-transform: uppercase;
+    transition: all .2s; border-radius: 2px;
+  }
+  .btn-outline:hover { border-color: var(--white); }
+
+  .home-section { padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; }
+  .section-header {
+    display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2rem;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem; font-weight: 700; color: var(--black);
+  }
+  .section-link {
+    font-size: .75rem; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--mid); cursor: pointer; border-bottom: 1px solid transparent;
+    transition: all .2s; background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .section-link:hover { color: var(--black); border-bottom-color: var(--black); }
+
+  .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; }
+  .product-card {
+    cursor: pointer; position: relative;
+    transition: transform .25s;
+  }
+  .product-card:hover { transform: translateY(-4px); }
+  .product-img {
+    aspect-ratio: 3/4; background: var(--surface);
+    border-radius: 4px; overflow: hidden; margin-bottom: .75rem;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .product-img-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; color: #ccc;
+  }
+  .product-card:hover .product-img { background: #ebe9e3; }
+  .product-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: var(--black); color: var(--white);
+    font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 2px;
+  }
+  .product-badge.gold { background: var(--gold); color: var(--black); }
+  .product-badge.oos { background: #555; }
+  .product-name { font-size: .9rem; font-weight: 500; color: var(--black); margin-bottom: .25rem; }
+  .product-price { font-size: .85rem; color: var(--mid); }
+  .product-price strong { color: var(--black); font-weight: 500; }
+  .product-colors { display: flex; gap: 4px; margin-top: .5rem; }
+  .color-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.15); cursor: pointer;
+    transition: transform .15s;
+  }
+  .color-dot:hover { transform: scale(1.3); }
+  .quick-add {
+    position: absolute; bottom: 10px; left: 10px; right: 10px;
+    background: rgba(10,10,10,.92); color: var(--white);
+    border: none; padding: .6rem; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: .75rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    border-radius: 2px; opacity: 0; transition: opacity .2s;
+  }
+  .product-card:hover .quick-add { opacity: 1; }
+
+  /* ===== CATALOGUE ===== */
+  .catalogue-layout { display: grid; grid-template-columns: 220px 1fr; gap: 2rem; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  .filters-panel { position: sticky; top: 76px; align-self: start; }
+  .filters-title { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--mid); margin-bottom: 1.5rem; }
+  .filter-group { margin-bottom: 1.5rem; }
+  .filter-group-title { font-size: .8rem; font-weight: 500; margin-bottom: .75rem; color: var(--black); }
+  .filter-option { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; cursor: pointer; }
+  .filter-option input[type=checkbox] { accent-color: var(--black); cursor: pointer; }
+  .filter-option label { font-size: .8rem; color: var(--mid); cursor: pointer; transition: color .15s; }
+  .filter-option:hover label { color: var(--black); }
+  .price-range { display: flex; gap: .5rem; align-items: center; }
+  .price-range input { width: 70px; border: 1px solid var(--light); border-radius: 3px; padding: 5px 8px; font-size: .8rem; outline: none; transition: border-color .2s; }
+  .price-range input:focus { border-color: var(--black); }
+  .color-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+  .color-swatch {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: all .15s;
+  }
+  .color-swatch.selected, .color-swatch:hover { border-color: var(--black); }
+  .cat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .cat-count { font-size: .8rem; color: var(--mid); }
+  .sort-select { border: 1px solid var(--light); background: var(--white); padding: 6px 10px; border-radius: 3px; font-size: .8rem; color: var(--black); outline: none; cursor: pointer; }
+
+  /* ===== FICHE PRODUIT ===== */
+  .product-page { max-width: 1100px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+  .product-gallery { }
+  .main-img { aspect-ratio: 4/5; background: var(--surface); border-radius: 4px; margin-bottom: .75rem; display: flex; align-items: center; justify-content: center; font-size: 6rem; color: #ccc; overflow: hidden; }
+  .thumbs { display: flex; gap: .5rem; }
+  .thumb { width: 70px; aspect-ratio: 4/5; background: var(--surface); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #bbb; border: 2px solid transparent; transition: border-color .15s; }
+  .thumb.active, .thumb:hover { border-color: var(--black); }
+  .product-info { display: flex; flex-direction: column; gap: 1.25rem; }
+  .product-category { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--mid); }
+  .product-detail-name { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1.2; }
+  .product-detail-price { font-size: 1.4rem; font-weight: 300; }
+  .product-detail-price .original { text-decoration: line-through; color: var(--mid); font-size: 1rem; margin-left: .5rem; }
+  .divider { border: none; border-top: 1px solid var(--light); }
+  .attribute-label { font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--mid); margin-bottom: .6rem; }
+  .color-options { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .color-opt { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all .15s; box-shadow: 0 0 0 1px rgba(0,0,0,.1); }
+  .color-opt.active { border-color: var(--black); }
+  .size-options { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .size-opt {
+    min-width: 44px; height: 36px; border: 1px solid var(--light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; cursor: pointer; transition: all .15s; border-radius: 2px;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .size-opt.active { border-color: var(--black); background: var(--black); color: var(--white); }
+  .size-opt:hover:not(.active):not(.oos) { border-color: var(--anthracite); }
+  .size-opt.oos { opacity: .4; cursor: not-allowed; position: relative; text-decoration: line-through; }
+  .add-to-cart-btn {
+    background: var(--black); color: var(--white); border: none;
+    padding: 1rem 2rem; font-family: 'DM Sans', sans-serif;
+    font-size: .85rem; letter-spacing: .12em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s; border-radius: 2px; font-weight: 500;
+  }
+  .add-to-cart-btn:hover { background: var(--anthracite); transform: translateY(-1px); }
+  .notify-btn {
+    background: none; border: 1px solid var(--black);
+    padding: 1rem; font-family: 'DM Sans', sans-serif;
+    font-size: .8rem; letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; color: var(--black); border-radius: 2px;
+    transition: all .2s;
+  }
+  .notify-btn:hover { background: var(--surface); }
+  .notify-form { background: var(--surface); padding: 1rem; border-radius: 4px; display: none; }
+  .notify-form.show { display: block; animation: fadeIn .3s; }
+  .notify-input { width: 100%; border: 1px solid var(--light); border-radius: 3px; padding: 8px 12px; font-size: .85rem; outline: none; transition: border-color .2s; font-family: 'DM Sans', sans-serif; }
+  .notify-input:focus { border-color: var(--black); }
+  .notify-submit { margin-top: .5rem; width: 100%; background: var(--black); color: var(--white); border: none; padding: .65rem; font-family: 'DM Sans', sans-serif; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; }
+
+  /* ===== PANIER ===== */
+  .cart-page { max-width: 900px; margin: 0 auto; padding: 2.5rem 2rem; }
+  .cart-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; margin-bottom: 2rem; }
+  .cart-layout { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+  .cart-items { display: flex; flex-direction: column; gap: 1rem; }
+  .cart-item { display: grid; grid-template-columns: 80px 1fr auto; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid var(--light); border-radius: 4px; }
+  .cart-item-img { width: 80px; aspect-ratio: 3/4; background: var(--surface); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #bbb; }
+  .cart-item-name { font-size: .9rem; font-weight: 500; margin-bottom: .25rem; }
+  .cart-item-variant { font-size: .75rem; color: var(--mid); }
+  .qty-control { display: flex; align-items: center; gap: .5rem; margin-top: .5rem; }
+  .qty-btn { width: 28px; height: 28px; border: 1px solid var(--light); background: none; cursor: pointer; border-radius: 2px; font-size: 1rem; line-height: 1; transition: all .15s; }
+  .qty-btn:hover { border-color: var(--black); }
+  .qty-val { font-size: .85rem; min-width: 20px; text-align: center; font-weight: 500; }
+  .remove-btn { background: none; border: none; cursor: pointer; color: var(--mid); font-size: .75rem; text-decoration: underline; transition: color .15s; margin-top: 4px; display: block; }
+  .remove-btn:hover { color: var(--danger); }
+  .cart-item-price { font-size: .9rem; font-weight: 500; white-space: nowrap; }
+  .order-summary { background: var(--black); padding: 1.5rem; border-radius: 4px; align-self: start; color: var(--white); }
+  .summary-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 1.25rem; }
+  .summary-line { display: flex; justify-content: space-between; font-size: .82rem; margin-bottom: .6rem; }
+  .summary-line.total { border-top: 1px solid #333; padding-top: .75rem; margin-top: .75rem; font-weight: 500; font-size: 1rem; }
+  .promo-input-wrap { display: flex; gap: .5rem; margin: 1rem 0; }
+  .promo-input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: var(--white); padding: 7px 10px; border-radius: 2px; font-size: .8rem; outline: none; font-family: 'DM Sans', sans-serif; }
+  .promo-input::placeholder { color: #555; }
+  .promo-apply { background: #333; border: none; color: var(--white); padding: 7px 12px; cursor: pointer; border-radius: 2px; font-size: .75rem; font-family: 'DM Sans', sans-serif; transition: background .15s; }
+  .promo-apply:hover { background: #444; }
+  .checkout-btn { width: 100%; background: var(--gold); color: var(--black); border: none; padding: .85rem; font-family: 'DM Sans', sans-serif; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; font-weight: 500; transition: all .2s; margin-top: .75rem; }
+  .checkout-btn:hover { background: var(--gold-light); }
+  .shipping-opts { margin-top: 1rem; }
+  .shipping-opt { display: flex; align-items: flex-start; gap: .6rem; padding: .6rem; border: 1px solid #333; border-radius: 3px; cursor: pointer; margin-bottom: .5rem; transition: border-color .15s; }
+  .shipping-opt input { margin-top: 2px; accent-color: var(--gold); }
+  .shipping-opt:hover { border-color: #555; }
+  .shipping-opt label { font-size: .78rem; cursor: pointer; }
+  .shipping-opt label span { color: #aaa; font-size: .72rem; display: block; margin-top: 2px; }
+  .payment-icons { display: flex; gap: .5rem; margin-top: .75rem; justify-content: center; }
+  .payment-icon { background: #1a1a1a; border: 1px solid #333; padding: 4px 10px; border-radius: 3px; font-size: .65rem; color: #aaa; letter-spacing: .05em; }
+
+  /* ===== ADMIN ===== */
+  .admin-layout { display: grid; grid-template-columns: 200px 1fr; min-height: calc(100vh - 60px); }
+  .admin-sidebar { background: #111; padding: 1.5rem 0; border-right: 1px solid #222; position: sticky; top: 60px; align-self: start; min-height: calc(100vh - 60px); }
+  .admin-sidebar-title { font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: #555; padding: 0 1.25rem 1rem; }
+  .admin-nav-btn {
+    display: flex; align-items: center; gap: .6rem;
+    width: 100%; background: none; border: none; cursor: pointer;
+    color: #888; font-family: 'DM Sans', sans-serif; font-size: .82rem;
+    padding: .6rem 1.25rem; text-align: left; transition: all .15s;
+  }
+  .admin-nav-btn:hover, .admin-nav-btn.active { color: var(--white); background: #1a1a1a; }
+  .admin-nav-btn.active { border-left: 2px solid var(--gold); }
+  .admin-main { padding: 2rem; background: #0e0e0e; color: var(--white); min-height: calc(100vh - 60px); }
+  .admin-page-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; color: var(--white); }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; padding: 1.25rem; }
+  .stat-label { font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: #666; margin-bottom: .5rem; }
+  .stat-value { font-size: 1.5rem; font-weight: 500; color: var(--white); }
+  .stat-sub { font-size: .72rem; color: #555; margin-top: .25rem; }
+  .stat-sub.up { color: var(--success); }
+  .stat-sub.down { color: var(--danger); }
+  .admin-table-wrap { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; overflow: hidden; margin-bottom: 2rem; }
+  .admin-table-head { padding: 1rem 1.25rem; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: space-between; }
+  .admin-table-head-title { font-size: .8rem; font-weight: 500; color: var(--white); }
+  table.admin-table { width: 100%; border-collapse: collapse; }
+  table.admin-table th { text-align: left; font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; color: #555; padding: .6rem 1.25rem; border-bottom: 1px solid #222; }
+  table.admin-table td { padding: .7rem 1.25rem; font-size: .8rem; color: #bbb; border-bottom: 1px solid #161616; }
+  table.admin-table tr:last-child td { border-bottom: none; }
+  table.admin-table tr:hover td { background: #222; color: var(--white); }
+  .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: .65rem; font-weight: 500; letter-spacing: .05em; }
+  .status-badge.pending { background: #2a2200; color: #f0a500; }
+  .status-badge.shipped { background: #0a1f2a; color: #4fc3f7; }
+  .status-badge.delivered { background: #0a2010; color: #66bb6a; }
+  .status-badge.handover { background: #1a0a2a; color: #ce93d8; }
+  .margin-bar { height: 5px; border-radius: 3px; margin-top: 4px; }
+  .margin-bar.low { background: #a32d2d; }
+  .margin-bar.ok { background: #ba7517; }
+  .margin-bar.good { background: #2d7a4f; }
+  .import-zone { border: 2px dashed #333; border-radius: 6px; padding: 2rem; text-align: center; color: #555; cursor: pointer; transition: all .2s; margin-bottom: 2rem; }
+  .import-zone:hover { border-color: var(--gold); color: #888; }
+  .import-zone p { font-size: .85rem; margin-top: .5rem; }
+  .admin-btn { background: var(--gold); color: var(--black); border: none; padding: .55rem 1.25rem; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: .75rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: background .15s; }
+  .admin-btn:hover { background: var(--gold-light); }
+  .admin-btn.outline { background: none; border: 1px solid #444; color: #aaa; }
+  .admin-btn.outline:hover { border-color: #666; color: var(--white); }
+
+  /* ===== PROFIL ===== */
+  .profile-page { max-width: 860px; margin: 0 auto; padding: 2.5rem 2rem; }
+  .profile-header { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2.5rem; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--anthracite); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); }
+  .profile-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; }
+  .profile-email { font-size: .8rem; color: var(--mid); }
+  .profile-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--light); margin-bottom: 2rem; }
+  .profile-tab { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; padding: .6rem 1.25rem; color: var(--mid); border-bottom: 2px solid transparent; transition: all .15s; }
+  .profile-tab.active { color: var(--black); border-bottom-color: var(--black); }
+  .order-card { border: 1px solid var(--light); border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
+  .order-card-head { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1rem; background: var(--surface); }
+  .order-num { font-size: .78rem; font-weight: 500; }
+  .order-date { font-size: .75rem; color: var(--mid); }
+  .order-card-body { padding: .85rem 1rem; font-size: .82rem; color: var(--mid); }
+  .order-item-row { display: flex; justify-content: space-between; padding: .3rem 0; }
+  .tracker { display: flex; align-items: center; gap: 0; margin-top: 1rem; }
+  .tracker-step { flex: 1; text-align: center; position: relative; }
+  .tracker-step::before { content: ''; position: absolute; top: 10px; left: 50%; right: -50%; height: 2px; background: var(--light); z-index: 0; }
+  .tracker-step:last-child::before { display: none; }
+  .tracker-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--light); background: var(--white); margin: 0 auto .3rem; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; font-size: .6rem; }
+  .tracker-dot.done { background: var(--black); border-color: var(--black); color: var(--white); }
+  .tracker-dot.current { border-color: var(--gold); background: var(--gold); color: var(--black); }
+  .tracker-label { font-size: .65rem; color: var(--mid); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    background: var(--black); color: #666; margin-top: 4rem;
+    padding: 3rem 2rem 1.5rem;
+  }
+  .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 2rem; max-width: 1200px; margin: 0 auto 2rem; }
+  .footer-brand { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 900; color: var(--white); margin-bottom: .5rem; }
+  .footer-brand span { color: var(--gold); }
+  .footer-tagline { font-size: .8rem; line-height: 1.6; color: #555; }
+  .footer-col-title { font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: #444; margin-bottom: 1rem; }
+  .footer-links { display: flex; flex-direction: column; gap: .5rem; }
+  .footer-links button { background: none; border: none; cursor: pointer; color: #555; font-family: 'DM Sans', sans-serif; font-size: .8rem; text-align: left; padding: 0; transition: color .15s; }
+  .footer-links button:hover { color: var(--white); }
+  .footer-bottom { border-top: 1px solid #1a1a1a; padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+  .footer-copy { font-size: .72rem; color: #3a3a3a; }
+  .footer-legal { display: flex; gap: 1.5rem; }
+  .footer-legal button { background: none; border: none; cursor: pointer; color: #3a3a3a; font-size: .72rem; font-family: 'DM Sans', sans-serif; transition: color .15s; }
+  .footer-legal button:hover { color: #888; }
+
+  /* LEGAL PAGES */
+  .legal-page { max-width: 760px; margin: 0 auto; padding: 3rem 2rem; }
+  .legal-page h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; margin-bottom: .5rem; }
+  .legal-updated { font-size: .78rem; color: var(--mid); margin-bottom: 2rem; }
+  .legal-page h2 { font-size: 1.1rem; font-weight: 500; margin: 2rem 0 .75rem; }
+  .legal-page p { font-size: .88rem; line-height: 1.8; color: #444; margin-bottom: .75rem; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+    background: var(--black); color: var(--white);
+    padding: .85rem 1.25rem; border-radius: 4px;
+    font-size: .82rem; display: flex; align-items: center; gap: .75rem;
+    transform: translateY(80px); opacity: 0; transition: all .3s;
+    border-left: 3px solid var(--gold);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; animation: fadeIn .2s; }
+  .modal { background: var(--white); border-radius: 6px; padding: 2rem; max-width: 480px; width: 90%; position: relative; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; cursor: pointer; font-size: 1.2rem; color: var(--mid); }
+  .modal-body { font-size: .85rem; color: var(--mid); line-height: 1.7; }
+  .modal-input { width: 100%; border: 1px solid var(--light); border-radius: 3px; padding: 9px 12px; font-size: .9rem; margin: 1rem 0 .5rem; outline: none; font-family: 'DM Sans', sans-serif; transition: border-color .2s; }
+  .modal-input:focus { border-color: var(--black); }
+
+  /* Admin product editor */
+  .product-editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .form-group { margin-bottom: 1rem; }
+  .form-label { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: #666; display: block; margin-bottom: .4rem; }
+  .form-input { width: 100%; background: #111; border: 1px solid #2a2a2a; border-radius: 3px; padding: 8px 10px; color: var(--white); font-family: 'DM Sans', sans-serif; font-size: .85rem; outline: none; transition: border-color .2s; }
+  .form-input:focus { border-color: var(--gold); }
+  .margin-indicator { display: flex; align-items: center; gap: .75rem; padding: .75rem; background: #111; border: 1px solid #2a2a2a; border-radius: 4px; margin-top: .5rem; }
+  .margin-val { font-size: 1.1rem; font-weight: 500; }
+  .margin-pct { font-size: .8rem; color: #777; }
+
+  /* ===== AUTH PAGE ===== */
+  .auth-page { min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; background: var(--surface); padding: 2rem; }
+  .auth-card { background: var(--white); border-radius: 6px; padding: 2.5rem; max-width: 420px; width: 100%; box-shadow: 0 8px 40px rgba(0,0,0,.08); }
+  .auth-logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; text-align: center; margin-bottom: 2rem; }
+  .auth-logo span { color: var(--gold); }
+  .auth-tabs { display: flex; border-bottom: 1px solid var(--light); margin-bottom: 1.75rem; }
+  .auth-tab { flex: 1; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; padding: .6rem; color: var(--mid); border-bottom: 2px solid transparent; transition: all .15s; }
+  .auth-tab.active { color: var(--black); border-bottom-color: var(--black); }
+  .auth-field { margin-bottom: 1rem; }
+  .auth-label { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: .4rem; }
+  .auth-input { width: 100%; border: 1px solid var(--light); border-radius: 3px; padding: 10px 12px; font-size: .9rem; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .2s; }
+  .auth-input:focus { border-color: var(--black); }
+  .auth-submit { width: 100%; background: var(--black); color: var(--white); border: none; padding: .9rem; font-family: 'DM Sans', sans-serif; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; font-weight: 500; transition: all .2s; margin-top: .5rem; }
+  .auth-submit:hover { background: var(--anthracite); }
+  .auth-divider { text-align: center; font-size: .78rem; color: var(--mid); margin: 1rem 0; }
+  .auth-social { display: flex; gap: .75rem; margin-bottom: 1rem; }
+  .auth-social-btn { flex: 1; background: none; border: 1px solid var(--light); border-radius: 3px; padding: .65rem; cursor: pointer; font-size: .8rem; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; justify-content: center; gap: .4rem; transition: all .15s; }
+  .auth-social-btn:hover { border-color: var(--anthracite); background: var(--surface); }
+
+  /* ===== CONFIRMATION ===== */
+  .confirmation-page { max-width: 680px; margin: 0 auto; padding: 3rem 2rem; text-align: center; }
+  .confirmation-icon { width: 72px; height: 72px; border-radius: 50%; background: #f0faf4; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2rem; }
+  .confirmation-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; margin-bottom: .5rem; }
+  .confirmation-sub { color: var(--mid); font-size: .9rem; line-height: 1.7; margin-bottom: 2rem; }
+  .confirmation-box { background: var(--surface); border-radius: 6px; padding: 1.5rem; text-align: left; margin-bottom: 1.5rem; }
+  .confirmation-box-title { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--mid); margin-bottom: 1rem; }
+  .confirmation-row { display: flex; justify-content: space-between; font-size: .85rem; padding: .4rem 0; border-bottom: 1px solid var(--light); }
+  .confirmation-row:last-child { border-bottom: none; font-weight: 500; }
+  .delivery-info-box { border: 1px solid var(--gold); border-radius: 6px; padding: 1rem 1.25rem; text-align: left; margin-bottom: 1.5rem; background: #fdf9f0; }
+  .delivery-info-title { font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); margin-bottom: .5rem; }
+  .delivery-info-text { font-size: .85rem; line-height: 1.6; color: var(--anthracite); }
+
+  /* ===== POINT RELAIS MAP ===== */
+  .relay-modal-content { max-width: 680px; width: 95vw; max-height: 80vh; overflow-y: auto; }
+  .relay-search-bar { display: flex; gap: .5rem; margin-bottom: 1rem; }
+  .relay-search-input { flex: 1; border: 1px solid var(--light); border-radius: 3px; padding: 8px 12px; font-size: .85rem; font-family: 'DM Sans', sans-serif; outline: none; }
+  .relay-search-input:focus { border-color: var(--black); }
+  .relay-map { width: 100%; height: 220px; background: #e8e8e4; border-radius: 4px; margin-bottom: 1rem; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .relay-map-pin { position: absolute; font-size: 1.4rem; cursor: pointer; transform: translate(-50%, -100%); transition: transform .15s; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+  .relay-map-pin:hover { transform: translate(-50%, -100%) scale(1.3); }
+  .relay-map-pin.selected { filter: drop-shadow(0 2px 8px rgba(201,168,76,.8)); }
+  .relay-map-street { font-size: .7rem; color: #999; }
+  .relay-list { display: flex; flex-direction: column; gap: .5rem; max-height: 240px; overflow-y: auto; }
+  .relay-item { border: 1px solid var(--light); border-radius: 4px; padding: .75rem 1rem; cursor: pointer; transition: all .15s; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .relay-item:hover { border-color: var(--anthracite); background: var(--surface); }
+  .relay-item.selected { border-color: var(--gold); background: #fdf9f0; }
+  .relay-name { font-size: .85rem; font-weight: 500; }
+  .relay-address { font-size: .75rem; color: var(--mid); margin-top: 2px; }
+  .relay-network { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
+  .relay-distance { font-size: .75rem; color: var(--mid); white-space: nowrap; }
+  .relay-hours { font-size: .72rem; color: var(--success); }
+
+  /* ===== SLOT PICKER ===== */
+  .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  .slot-btn { border: 1px solid var(--light); background: none; border-radius: 3px; padding: .5rem; font-size: .8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+  .slot-btn:hover { border-color: var(--black); }
+  .slot-btn.active { background: var(--black); color: var(--white); border-color: var(--black); }
+  .slot-date-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; overflow-x: auto; }
+  .slot-date-tab { background: none; border: 1px solid var(--light); border-radius: 3px; padding: .4rem .8rem; font-size: .78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; transition: all .15s; }
+  .slot-date-tab.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  /* ===== ADMIN PRODUCT EDITOR ===== */
+  .product-editor-modal { max-width: 780px; width: 95vw; max-height: 85vh; overflow-y: auto; }
+  .color-image-mapper { background: #111; border: 1px solid #2a2a2a; border-radius: 4px; padding: 1rem; margin-top: .5rem; }
+  .color-mapper-row { display: flex; align-items: center; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid #1e1e1e; }
+  .color-mapper-row:last-child { border-bottom: none; }
+  .color-mapper-swatch { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #333; flex-shrink: 0; }
+  .color-mapper-label { font-size: .8rem; color: #aaa; min-width: 80px; }
+  .color-mapper-input { flex: 1; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 3px; padding: 5px 8px; color: var(--white); font-size: .75rem; font-family: 'DM Sans', sans-serif; outline: none; }
+  .stock-variant-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; }
+  .stock-variant-item { text-align: center; }
+  .stock-variant-label { font-size: .65rem; color: #666; text-transform: uppercase; letter-spacing: .1em; display: block; margin-bottom: .25rem; }
+  .stock-variant-input { width: 100%; background: #111; border: 1px solid #2a2a2a; border-radius: 3px; padding: 6px 4px; color: var(--white); font-size: .85rem; text-align: center; outline: none; font-family: 'DM Sans', sans-serif; }
+
+  /* ===== ADMIN CHART ===== */
+  .chart-area { height: 180px; display: flex; align-items: flex-end; gap: 8px; padding: 0 1rem 1rem; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--gold); transition: height .4s ease; min-height: 4px; }
+  .chart-bar.margin { background: #2d7a4f; }
+  .chart-label { font-size: .6rem; color: #555; }
+  .chart-val { font-size: .62rem; color: #888; }
+
+  /* ===== COOKIE BANNER ===== */
+  .cookie-banner { position: fixed; bottom: 0; left: 0; right: 0; z-index: 500; background: var(--black); color: var(--white); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; border-top: 1px solid #222; transform: translateY(100%); transition: transform .4s ease; flex-wrap: wrap; }
+  .cookie-banner.show { transform: translateY(0); }
+  .cookie-banner-text { font-size: .78rem; color: #aaa; line-height: 1.6; flex: 1; }
+  .cookie-banner-text a { color: var(--gold); cursor: pointer; text-decoration: underline; }
+  .cookie-banner-actions { display: flex; gap: .75rem; flex-shrink: 0; }
+  .cookie-accept { background: var(--gold); color: var(--black); border: none; padding: .55rem 1.25rem; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: .78rem; font-weight: 500; cursor: pointer; }
+  .cookie-decline { background: none; color: #666; border: 1px solid #333; padding: .55rem 1.25rem; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: .78rem; cursor: pointer; transition: color .15s; }
+  .cookie-decline:hover { color: #aaa; }
+
+  /* ===== API STATUS ===== */
+  .api-status { font-size:.65rem; padding:2px 7px; border-radius:10px; font-weight:500; letter-spacing:.05em; }
+  .api-status.connected { background:#0a2010; color:#66bb6a; }
+  .api-status.error { background:#2a0a0a; color:#ef9a9a; }
+  .api-status.unconfigured { background:#1a1a1a; color:#777; }
+
+  /* ===== SUPABASE AUTH OVERLAY ===== */
+  .auth-loading { display:flex; align-items:center; gap:.5rem; font-size:.8rem; color:var(--mid); padding:.5rem 0; }
+  .spinner { width:16px; height:16px; border:2px solid var(--light); border-top-color:var(--black); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ===== IMPORT PROGRESS ===== */
+  .import-progress { background:#111; border-radius:4px; padding:1rem; margin-top:1rem; }
+  .import-bar-wrap { background:#222; border-radius:3px; height:6px; margin:.5rem 0; overflow:hidden; }
+  .import-bar { height:100%; background:var(--gold); border-radius:3px; transition:width .3s ease; }
+
+  /* ===== CHECKOUT STEPS ===== */
+  .checkout-steps { display:flex; gap:0; margin-bottom:1.5rem; border-bottom:1px solid var(--light); }
+  .checkout-step { flex:1; text-align:center; padding:.6rem; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--mid); border-bottom:2px solid transparent; cursor:pointer; transition:all .15s; }
+  .checkout-step.active { color:var(--black); border-bottom-color:var(--black); }
+  .checkout-step.done { color:var(--success); }
+
+  /* ===== ORDER CONFIRMATION ===== */
+  .confirm-email-preview { background:var(--surface); border:1px solid var(--light); border-radius:6px; padding:1.5rem; font-size:.82rem; line-height:1.7; text-align:left; }
+  .confirm-email-preview .email-header { background:var(--black); color:var(--white); padding:1rem; border-radius:4px 4px 0 0; text-align:center; font-family:'Playfair Display',serif; font-size:1.1rem; margin:-1.5rem -1.5rem 1rem; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .catalogue-layout { grid-template-columns: 1fr; }
+    .filters-panel { position: static; }
+    .product-page { grid-template-columns: 1fr; gap: 1.5rem; }
+    .cart-layout { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .admin-layout { grid-template-columns: 1fr; }
+    .admin-sidebar { display: flex; overflow-x: auto; min-height: auto; position: static; border-right: none; border-bottom: 1px solid #222; padding: .5rem 0; }
+    .admin-sidebar-title { display: none; }
+    .product-editor-grid { grid-template-columns: 1fr; }
+    .nav-search { display: none; }
+    nav { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COOKIE BANNER -->
+<div class="cookie-banner" id="cookieBanner">
+  <div class="cookie-banner-text">
+    🍪 FansFR utilise des cookies pour améliorer votre expérience. En continuant, vous acceptez notre <a onclick="showPage('legal-cookies')">politique cookies</a> conforme au RGPD.
+  </div>
+  <div class="cookie-banner-actions">
+    <button class="cookie-decline" onclick="declineCookies()">Refuser</button>
+    <button class="cookie-accept" onclick="acceptCookies()">Accepter tout</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">Fans<span>FR</span></div>
+  <div class="nav-links">
+    <button onclick="showPage('home')" id="nav-home" class="active">Accueil</button>
+    <button onclick="showPage('catalogue')" id="nav-catalogue">Catalogue</button>
+    <button onclick="showPage('product')" id="nav-product">Produit</button>
+    <button onclick="showPage('cart')" id="nav-cart">Panier</button>
+    <button onclick="showPage('profile')" id="nav-profile">Profil</button>
+    <button onclick="showPage('admin')" id="nav-admin" style="color:#c9a84c">Admin</button>
+  </div>
+  <div class="nav-right">
+    <input type="text" class="nav-search" placeholder="Rechercher..." id="searchInput" oninput="handleSearch(this.value)">
+    <button class="icon-btn" onclick="showPage('auth')" title="Compte" id="authBtn">👤</button>
+    <button class="icon-btn" onclick="showPage('cart')" title="Panier">
+      🛒
+      <span class="cart-badge" id="cartBadge">2</span>
+    </button>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ <span id="toastMsg">Ajouté au panier</span></div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('checkoutModal')">✕</button>
+    <div class="modal-title">Paiement sécurisé</div>
+    <div class="modal-body">
+      <p>Vous allez être redirigé vers Stripe pour finaliser votre commande de <strong id="checkoutTotal">95,00 €</strong>.</p>
+      <p style="margin-top:.5rem">Méthodes acceptées :</p>
+      <div class="payment-icons" style="justify-content:flex-start; margin-top:.5rem">
+        <div class="payment-icon">💳 Carte</div>
+        <div class="payment-icon">🍎 Apple Pay</div>
+        <div class="payment-icon">G Pay</div>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%; margin-top:1.5rem" onclick="simulatePayment()">Payer maintenant →</button>
+  </div>
+</div>
+
+<!-- RELAY MAP MODAL -->
+<div class="modal-overlay" id="relayModal">
+  <div class="modal relay-modal-content">
+    <button class="modal-close" onclick="closeModal('relayModal')">✕</button>
+    <div class="modal-title">Choisir un point relais</div>
+    <div class="relay-search-bar">
+      <input type="text" class="relay-search-input" placeholder="Code postal ou ville (ex: 49000 Angers)" id="relaySearchInput" value="49000 Angers">
+      <button class="btn-primary" style="padding:.5rem 1rem; font-size:.75rem" onclick="searchRelays()">Rechercher</button>
+    </div>
+    <div class="relay-map" id="relayMap">
+      <!-- Simulated map with pins -->
+      <svg viewBox="0 0 680 220" style="width:100%;height:100%;position:absolute;inset:0">
+        <rect width="680" height="220" fill="#dde8d0"/>
+        <!-- Roads -->
+        <rect x="0" y="90" width="680" height="18" fill="#c8d5b5" rx="2"/>
+        <rect x="0" y="150" width="680" height="10" fill="#c8d5b5" rx="2"/>
+        <rect x="180" y="0" width="12" height="220" fill="#c8d5b5" rx="2"/>
+        <rect x="400" y="0" width="12" height="220" fill="#c8d5b5" rx="2"/>
+        <rect x="560" y="0" width="8" height="220" fill="#c8d5b5" rx="2"/>
+        <!-- Buildings -->
+        <rect x="60" y="40" width="60" height="45" fill="#b8c9a0" rx="2"/>
+        <rect x="220" y="30" width="80" height="55" fill="#b8c9a0" rx="2"/>
+        <rect x="430" y="40" width="55" height="45" fill="#b8c9a0" rx="2"/>
+        <rect x="580" y="60" width="60" height="30" fill="#b8c9a0" rx="2"/>
+        <rect x="60" y="170" width="80" height="40" fill="#b8c9a0" rx="2"/>
+        <rect x="220" y="165" width="50" height="45" fill="#b8c9a0" rx="2"/>
+        <rect x="430" y="168" width="80" height="42" fill="#b8c9a0" rx="2"/>
+        <text x="20" y="14" font-size="8" fill="#999" font-family="DM Sans,sans-serif">Angers, Maine-et-Loire</text>
+      </svg>
+      <div id="mapPin1" class="relay-map-pin" style="left:25%;top:48%" onclick="selectRelayOnMap(0)" title="Mondial Relay — Tabac Presse">📍</div>
+      <div id="mapPin2" class="relay-map-pin" style="left:54%;top:65%" onclick="selectRelayOnMap(1)" title="InPost — Superette">📍</div>
+      <div id="mapPin3" class="relay-map-pin" style="left:75%;top:42%" onclick="selectRelayOnMap(2)" title="Colissimo — Bureau de poste">📍</div>
+      <div id="mapPin4" class="relay-map-pin" style="left:40%;top:30%" onclick="selectRelayOnMap(3)" title="Mondial Relay — Pharmacie">📍</div>
+    </div>
+    <div class="relay-list" id="relayList">
+      <!-- populated by JS -->
+    </div>
+    <div style="margin-top:1rem; display:flex; gap:.75rem; justify-content:flex-end">
+      <button class="btn-outline" style="color:var(--black);border-color:var(--light)" onclick="closeModal('relayModal')">Annuler</button>
+      <button class="btn-primary" id="relayConfirmBtn" onclick="confirmRelay()" disabled style="opacity:.5">Choisir ce point →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SLOT PICKER MODAL (remise en main propre) -->
+<div class="modal-overlay" id="slotModal">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" onclick="closeModal('slotModal')">✕</button>
+    <div class="modal-title">Choisir un créneau</div>
+    <p style="font-size:.82rem; color:var(--mid); margin-bottom:1rem">Remise en main propre — Angers (49000)</p>
+    <div class="slot-date-tabs" id="slotDateTabs"></div>
+    <div style="font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mid); margin-bottom:.5rem">Créneaux disponibles</div>
+    <div class="slot-grid" id="slotGrid"></div>
+    <div style="margin-top:1.25rem">
+      <label style="font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mid); display:block; margin-bottom:.4rem">Message optionnel</label>
+      <textarea id="slotMessage" style="width:100%; border:1px solid var(--light); border-radius:3px; padding:8px 12px; font-size:.85rem; font-family:'DM Sans',sans-serif; outline:none; resize:vertical; min-height:60px" placeholder="Précisions pour la remise (étage, digicode...)"></textarea>
+    </div>
+    <button class="btn-primary" style="width:100%; margin-top:1rem" onclick="confirmSlot()">Confirmer le créneau →</button>
+  </div>
+</div>
+
+<!-- ======================== API CONFIG MODAL ======================== -->
+<div class="modal-overlay" id="apiConfigModal">
+  <div class="modal" style="max-width:600px;width:95vw;max-height:85vh;overflow-y:auto">
+    <button class="modal-close" onclick="closeModal('apiConfigModal')">✕</button>
+    <div class="modal-title">⚙️ Configuration des APIs</div>
+    <p style="font-size:.8rem;color:var(--mid);margin-bottom:1.5rem">Connectez vos services tiers. Toutes les clés sont stockées localement dans votre navigateur (localStorage).</p>
+
+    <div style="display:flex;flex-direction:column;gap:1.25rem">
+      <!-- Supabase -->
+      <div style="border:1px solid var(--light);border-radius:6px;padding:1rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+          <span style="font-size:1.1rem">🗄️</span>
+          <strong style="font-size:.9rem">Supabase</strong>
+          <span id="supabase-status" class="api-status"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <div><label class="auth-label">URL du projet</label><input class="auth-input" id="cfg-supabase-url" placeholder="https://xxx.supabase.co" style="font-size:.78rem"></div>
+          <div><label class="auth-label">Clé anon</label><input class="auth-input" id="cfg-supabase-key" placeholder="eyJ..." style="font-size:.78rem;font-family:monospace"></div>
+        </div>
+        <button onclick="saveAndTestSupabase()" class="btn-primary" style="margin-top:.75rem;font-size:.72rem;padding:.5rem 1rem">Tester la connexion</button>
+      </div>
+
+      <!-- Stripe -->
+      <div style="border:1px solid var(--light);border-radius:6px;padding:1rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+          <span style="font-size:1.1rem">💳</span>
+          <strong style="font-size:.9rem">Stripe</strong>
+          <span id="stripe-status" class="api-status"></span>
+        </div>
+        <div><label class="auth-label">Publishable Key</label><input class="auth-input" id="cfg-stripe-key" placeholder="pk_live_... ou pk_test_..." style="font-size:.78rem;font-family:monospace"></div>
+        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">⚠️ Ne jamais saisir votre clé secrète ici. La clé secrète doit rester côté serveur (Supabase Edge Functions).</p>
+      </div>
+
+      <!-- Resend -->
+      <div style="border:1px solid var(--light);border-radius:6px;padding:1rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+          <span style="font-size:1.1rem">📧</span>
+          <strong style="font-size:.9rem">Resend (emails transactionnels)</strong>
+          <span id="resend-status" class="api-status"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <div><label class="auth-label">Clé API</label><input class="auth-input" id="cfg-resend-key" placeholder="re_..." style="font-size:.78rem;font-family:monospace"></div>
+          <div><label class="auth-label">Expéditeur</label><input class="auth-input" id="cfg-resend-from" placeholder="FansFR &lt;commandes@fansfr.fr&gt;" style="font-size:.78rem"></div>
+        </div>
+        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">La clé Resend est utilisée via Supabase Edge Functions pour les emails (confirmation, retour en stock).</p>
+      </div>
+
+      <!-- Sendcloud / Boxtal -->
+      <div style="border:1px solid var(--light);border-radius:6px;padding:1rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+          <span style="font-size:1.1rem">📦</span>
+          <strong style="font-size:.9rem">Sendcloud / Boxtal (livraison)</strong>
+          <span id="sendcloud-status" class="api-status"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <div><label class="auth-label">Sendcloud Public Key</label><input class="auth-input" id="cfg-sendcloud-pub" placeholder="..." style="font-size:.78rem;font-family:monospace"></div>
+          <div><label class="auth-label">Sendcloud Secret Key</label><input class="auth-input" id="cfg-sendcloud-sec" placeholder="..." style="font-size:.78rem;font-family:monospace"></div>
+        </div>
+        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">Utilisé pour la génération d'étiquettes et la sélection des points relais (Mondial Relay, InPost, Colissimo).</p>
+      </div>
+
+      <!-- Google Sheets -->
+      <div style="border:1px solid var(--light);border-radius:6px;padding:1rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+          <span style="font-size:1.1rem">📊</span>
+          <strong style="font-size:.9rem">Google Sheets API</strong>
+          <span id="gsheets-status" class="api-status"></span>
+        </div>
+        <div><label class="auth-label">Clé API Google</label><input class="auth-input" id="cfg-gsheets-key" placeholder="AIza..." style="font-size:.78rem;font-family:monospace"></div>
+        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">Activez l'API Google Sheets dans Google Cloud Console. Autorise la lecture des Sheets publics et partagés.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--light)">
+      <button class="btn-outline" style="color:var(--black);border-color:var(--light)" onclick="closeModal('apiConfigModal')">Annuler</button>
+      <button class="btn-primary" onclick="saveAllApiConfig()">Sauvegarder la configuration</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT EDITOR MODAL (Admin) -->
+<div class="modal-overlay" id="productEditorModal">
+  <div class="modal product-editor-modal" style="background:var(--black); color:var(--white);">
+    <button class="modal-close" onclick="closeModal('productEditorModal')" style="color:#aaa">✕</button>
+    <div class="modal-title" style="color:var(--white)">Éditer le produit</div>
+    <div class="product-editor-grid">
+      <div>
+        <div class="form-group">
+          <label class="form-label">Nom du produit</label>
+          <input class="form-input" id="edit-name" value="Tee Essential Noir">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Description</label>
+          <textarea class="form-input" id="edit-desc" style="resize:vertical; min-height:70px">Tee-shirt premium 100% coton peigné. Coupe regular, col rond.</textarea>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem">
+          <div class="form-group">
+            <label class="form-label">Prix de vente (€)</label>
+            <input class="form-input" id="edit-price" type="number" value="59" oninput="updateMarginCalc()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prix d'achat (€)</label>
+            <input class="form-input" id="edit-buy-price" type="number" value="22" oninput="updateMarginCalc()">
+          </div>
+        </div>
+        <div class="margin-indicator" id="marginIndicator">
+          <div>
+            <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#555; margin-bottom:.25rem">Marge calculée</div>
+            <div style="display:flex; align-items:baseline; gap:.5rem">
+              <span class="margin-val" id="marginVal" style="color:#2d7a4f">37,00 €</span>
+              <span class="margin-pct" id="marginPct">(62%)</span>
+            </div>
+            <div class="margin-bar good" id="marginBar" style="width:62%; margin-top:.4rem"></div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:.75rem">
+          <label class="form-label">Fournisseur</label>
+          <select class="form-input" id="edit-supplier">
+            <option>TextilePro SAS</option>
+            <option>ModaSource Italy</option>
+            <option>+ Nouveau fournisseur</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <select class="form-input" id="edit-cat">
+            <option>T-shirts</option><option>Sweats</option><option>Vestes</option><option>Accessoires</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="form-group">
+          <label class="form-label">Stock par variante (taille)</label>
+          <div class="stock-variant-grid">
+            <div class="stock-variant-item"><span class="stock-variant-label">XS</span><input type="number" class="stock-variant-input" value="5"></div>
+            <div class="stock-variant-item"><span class="stock-variant-label">S</span><input type="number" class="stock-variant-input" value="3"></div>
+            <div class="stock-variant-item"><span class="stock-variant-label">M</span><input type="number" class="stock-variant-input" value="8"></div>
+            <div class="stock-variant-item"><span class="stock-variant-label">L</span><input type="number" class="stock-variant-input" value="2"></div>
+            <div class="stock-variant-item"><span class="stock-variant-label">XL</span><input type="number" class="stock-variant-input" value="0"></div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem">
+          <label class="form-label">Couleurs disponibles</label>
+          <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.5rem">
+            <div style="display:flex; align-items:center; gap:.4rem; background:#1a1a1a; border:1px solid #333; border-radius:3px; padding:4px 8px; font-size:.75rem; color:#aaa">
+              <div style="width:14px;height:14px;border-radius:50%;background:#0a0a0a;border:1px solid #444"></div> Noir ✕
+            </div>
+            <div style="display:flex; align-items:center; gap:.4rem; background:#1a1a1a; border:1px solid #333; border-radius:3px; padding:4px 8px; font-size:.75rem; color:#aaa">
+              <div style="width:14px;height:14px;border-radius:50%;background:#fafaf8;border:1px solid #555"></div> Blanc ✕
+            </div>
+            <div style="display:flex; align-items:center; gap:.4rem; background:#1a1a1a; border:1px solid #333; border-radius:3px; padding:4px 8px; font-size:.75rem; color:#aaa">
+              <div style="width:14px;height:14px;border-radius:50%;background:#7a7a9d;border:1px solid #444"></div> Gris bleu ✕
+            </div>
+            <button style="background:none;border:1px dashed #444;border-radius:3px;padding:4px 8px;font-size:.72rem;color:#666;cursor:pointer" onclick="showToast('+ Couleur ajoutée')">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correspondance image ↔ couleur</label>
+          <div class="color-image-mapper">
+            <div class="color-mapper-row">
+              <div class="color-mapper-swatch" style="background:#0a0a0a"></div>
+              <span class="color-mapper-label">Noir</span>
+              <input class="color-mapper-input" placeholder="URL image 1" value="https://images.unsplash.com/photo-1521572163474?w=400">
+              <input class="color-mapper-input" placeholder="URL image 2" style="margin-left:.25rem">
+            </div>
+            <div class="color-mapper-row">
+              <div class="color-mapper-swatch" style="background:#fafaf8"></div>
+              <span class="color-mapper-label">Blanc</span>
+              <input class="color-mapper-input" placeholder="URL image 1">
+              <input class="color-mapper-input" placeholder="URL image 2" style="margin-left:.25rem">
+            </div>
+            <div class="color-mapper-row">
+              <div class="color-mapper-swatch" style="background:#7a7a9d"></div>
+              <span class="color-mapper-label">Gris bleu</span>
+              <input class="color-mapper-input" placeholder="URL image 1">
+              <input class="color-mapper-input" placeholder="URL image 2" style="margin-left:.25rem">
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:.75rem">
+          <label class="form-label">Badge produit</label>
+          <div style="display:flex; gap:.5rem">
+            <button class="admin-btn" style="font-size:.7rem; padding:.35rem .75rem; background:#1a3a1a; border:1px solid #2a5a2a; color:#66bb6a" onclick="showToast('Badge: Nouveau')">Nouveau</button>
+            <button class="admin-btn" style="font-size:.7rem; padding:.35rem .75rem; background:#1a1a3a; border:1px solid #2a2a5a; color:#7986cb" onclick="showToast('Badge: Tendance')">Tendance</button>
+            <button class="admin-btn" style="font-size:.7rem; padding:.35rem .75rem; background:#2a1a1a; border:1px solid #5a2a2a; color:#ef9a9a" onclick="showToast('Badge: Promo')">Promo</button>
+            <button class="admin-btn outline" style="font-size:.7rem; padding:.35rem .75rem" onclick="showToast('Badge retiré')">Aucun</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:.75rem; justify-content:flex-end; margin-top:1.5rem; padding-top:1rem; border-top:1px solid #222">
+      <button class="admin-btn outline" onclick="closeModal('productEditorModal')">Annuler</button>
+      <button class="admin-btn" onclick="saveProduct()">Sauvegarder les modifications</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== HOME ======================== -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div style="position:relative; z-index:1">
+      <div class="hero-label">Collection Printemps — Été 2025</div>
+      <h1 class="hero-title">Fans<em>FR</em></h1>
+      <p class="hero-sub">La mode premium à portée de main. Pièces sélectionnées, qualité irréprochable.</p>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="showPage('catalogue')">Explorer la boutique</button>
+        <button class="btn-outline" onclick="showPage('product')">Voir nos coups de cœur</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nouveautés -->
+  <div class="home-section">
+    <div class="section-header">
+      <h2 class="section-title">Nouveautés</h2>
+      <button class="section-link" onclick="showPage('catalogue')">Voir tout →</button>
+    </div>
+    <div class="product-grid" id="homeGrid"></div>
+  </div>
+
+  <!-- Tendances -->
+  <div class="home-section" style="background:var(--surface); max-width:100%; padding: 3rem 0">
+    <div style="max-width:1200px; margin:0 auto; padding: 0 2rem">
+      <div class="section-header">
+        <h2 class="section-title">Tendances</h2>
+        <button class="section-link" onclick="showPage('catalogue')">Voir tout →</button>
+      </div>
+      <div class="product-grid" id="trendGrid"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Fans<span>FR</span></div>
+        <p class="footer-tagline">La mode premium accessible, sélectionnée avec soin pour une clientèle exigeante.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <div class="footer-links">
+          <button onclick="showPage('home')">Accueil</button>
+          <button onclick="showPage('catalogue')">Catalogue</button>
+          <button onclick="showPage('cart')">Mon panier</button>
+          <button onclick="showPage('profile')">Mon compte</button>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Service client</div>
+        <div class="footer-links">
+          <button onclick="showPage('legal-cgv')">CGV</button>
+          <button onclick="showPage('legal-retour')">Retours & Échanges</button>
+          <button onclick="showPage('legal-mentions')">Mentions légales</button>
+          <button>Contact</button>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Légal</div>
+        <div class="footer-links">
+          <button onclick="showPage('legal-confidentialite')">Politique de confidentialité</button>
+          <button onclick="showPage('legal-cookies')">Gestion des cookies</button>
+          <button onclick="showPage('legal-mentions')">Mentions légales SIRET</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 FansFR — Tous droits réservés</div>
+      <div class="footer-legal">
+        <button onclick="showPage('legal-cgv')">CGV</button>
+        <button onclick="showPage('legal-confidentialite')">Confidentialité</button>
+        <button onclick="showPage('legal-cookies')">Cookies</button>
+        <button onclick="showPage('legal-retour')">Retours</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ======================== CATALOGUE ======================== -->
+<div class="page" id="page-catalogue">
+  <div class="catalogue-layout">
+    <div class="filters-panel">
+      <div class="filters-title">Filtres</div>
+      <div class="filter-group">
+        <div class="filter-group-title">Catégorie</div>
+        <div class="filter-option"><input type="checkbox" id="f-tshirt" checked onchange="filterProducts()"><label for="f-tshirt">T-shirts</label></div>
+        <div class="filter-option"><input type="checkbox" id="f-sweats" checked onchange="filterProducts()"><label for="f-sweats">Sweats</label></div>
+        <div class="filter-option"><input type="checkbox" id="f-vestes" checked onchange="filterProducts()"><label for="f-vestes">Vestes</label></div>
+        <div class="filter-option"><input type="checkbox" id="f-accessoires" checked onchange="filterProducts()"><label for="f-accessoires">Accessoires</label></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-title">Couleur</div>
+        <div class="color-filter">
+          <div class="color-swatch selected" style="background:#0a0a0a" title="Noir" onclick="toggleColorFilter(this,'noir')"></div>
+          <div class="color-swatch" style="background:#fafaf8; border-color:#ddd" title="Blanc" onclick="toggleColorFilter(this,'blanc')"></div>
+          <div class="color-swatch" style="background:#c9a84c" title="Or" onclick="toggleColorFilter(this,'or')"></div>
+          <div class="color-swatch" style="background:#2a2a2a" title="Anthracite" onclick="toggleColorFilter(this,'anthracite')"></div>
+          <div class="color-swatch" style="background:#8b4513" title="Camel" onclick="toggleColorFilter(this,'camel')"></div>
+          <div class="color-swatch" style="background:#7a7a9d" title="Gris bleu" onclick="toggleColorFilter(this,'gris-bleu')"></div>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-title">Taille</div>
+        <div class="size-options">
+          <button class="size-opt active" onclick="this.classList.toggle('active')">XS</button>
+          <button class="size-opt active" onclick="this.classList.toggle('active')">S</button>
+          <button class="size-opt active" onclick="this.classList.toggle('active')">M</button>
+          <button class="size-opt active" onclick="this.classList.toggle('active')">L</button>
+          <button class="size-opt active" onclick="this.classList.toggle('active')">XL</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-title">Prix (€)</div>
+        <div class="price-range">
+          <input type="number" id="priceMin" value="0" min="0" oninput="filterProducts()">
+          <span style="color:var(--mid)">—</span>
+          <input type="number" id="priceMax" value="200" min="0" oninput="filterProducts()">
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="cat-header">
+        <div class="cat-count" id="catCount">8 produits</div>
+        <select class="sort-select" onchange="sortProducts(this.value)">
+          <option value="new">Nouveautés</option>
+          <option value="price-asc">Prix croissant</option>
+          <option value="price-desc">Prix décroissant</option>
+          <option value="name">Nom A-Z</option>
+        </select>
+      </div>
+      <div class="product-grid" id="catalogueGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== FICHE PRODUIT ======================== -->
+<div class="page" id="page-product">
+  <div class="product-page">
+    <div class="product-gallery">
+      <div class="main-img" id="mainImg">👕</div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+    <div class="product-info">
+      <div class="product-category">T-shirt Premium — FansFR Originals</div>
+      <h1 class="product-detail-name">Tee Essential Noir</h1>
+      <div class="product-detail-price">59,00 € <span class="original">79,00 €</span></div>
+      <hr class="divider">
+      <div>
+        <div class="attribute-label">Couleur — <strong id="selectedColor" style="color:var(--black)">Noir</strong></div>
+        <div class="color-options" id="colorOptions"></div>
+      </div>
+      <div>
+        <div class="attribute-label">Taille — <strong id="selectedSize" style="color:var(--black)">M</strong></div>
+        <div class="size-options" id="sizeOptions"></div>
+      </div>
+      <div id="stockStatus" style="font-size:.8rem; color:var(--success)">✓ En stock (8 disponibles)</div>
+      <div id="addToCartSection" style="display:flex; gap:.75rem; flex-wrap:wrap">
+        <button class="add-to-cart-btn" onclick="addToCart('Tee Essential Noir', 59)">Ajouter au panier</button>
+        <button class="notify-btn" id="wishlistBtn" onclick="showToast('❤️ Ajouté à la liste de souhaits')">♡ Souhaits</button>
+      </div>
+      <div id="notifySection" style="display:none">
+        <button class="notify-btn" onclick="toggleNotifyForm()">🔔 M'avertir du retour en stock</button>
+        <div class="notify-form" id="notifyForm">
+          <p style="font-size:.8rem; color:var(--mid); margin-bottom:.5rem">Recevez un email dès que ce produit est de nouveau disponible.</p>
+          <input type="email" class="notify-input" placeholder="votre@email.fr" id="notifyEmail">
+          <button class="notify-submit" onclick="submitNotify()">M'alerter →</button>
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:.82rem; color:var(--mid); line-height:1.7">
+        <p>Tee-shirt premium 100% coton peigné. Coupe regular, col rond. Entretien : lavage 30°.</p>
+        <p style="margin-top:.5rem">✓ Livraison gratuite dès 80€ · ✓ Retour 14 jours · ✓ Paiement sécurisé</p>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-bottom" style="max-width:100%">
+      <div class="footer-copy">© 2025 FansFR</div>
+      <div class="footer-legal">
+        <button onclick="showPage('legal-cgv')">CGV</button>
+        <button onclick="showPage('legal-retour')">Retours</button>
+        <button onclick="showPage('legal-confidentialite')">Confidentialité</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ======================== PANIER ======================== -->
+<div class="page" id="page-cart">
+  <div class="cart-page">
+    <h1 class="cart-title">Mon panier</h1>
+    <div class="cart-layout">
+      <div class="cart-items" id="cartItems"></div>
+      <div class="order-summary">
+        <div class="summary-title">Récapitulatif</div>
+        <div class="summary-line"><span>Sous-total</span><span id="subtotal">95,00 €</span></div>
+        <div class="summary-line"><span>Livraison</span><span id="shippingCost">À calculer</span></div>
+        <div class="summary-line"><span style="color:#888; font-size:.72rem">Code promo</span></div>
+        <div class="promo-input-wrap">
+          <input type="text" class="promo-input" placeholder="FANSFR10" id="promoCode">
+          <button class="promo-apply" onclick="applyPromo()">OK</button>
+        </div>
+        <div id="promoMsg" style="font-size:.72rem; color:#4fc3f7; min-height:16px"></div>
+        <div class="summary-line total"><span>Total</span><span id="cartTotal">95,00 €</span></div>
+        <div class="shipping-opts" style="margin-bottom:.5rem">
+          <div style="font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:#666; margin-bottom:.6rem">Livraison</div>
+          <label class="shipping-opt">
+            <input type="radio" name="shipping" value="domicile" onchange="updateShipping(5.9)">
+            <label>Domicile<span>5,90 € — 2 à 4 jours (Colissimo)</span></label>
+          </label>
+          <label class="shipping-opt">
+            <input type="radio" name="shipping" value="relais" onchange="updateShipping(3.9)">
+            <label>Point relais / Locker<span>3,90 € — Mondial Relay, InPost, Colissimo</span></label>
+          </label>
+          <label class="shipping-opt">
+            <input type="radio" name="shipping" value="main-propre" onchange="updateShipping(0)">
+            <label>Remise en main propre — Angers<span>Gratuit · Choisir un créneau</span></label>
+          </label>
+        </div>
+        <button class="checkout-btn" onclick="openCheckout()">Passer la commande →</button>
+        <div class="payment-icons">
+          <div class="payment-icon">💳 Stripe</div>
+          <div class="payment-icon">🍎 Pay</div>
+          <div class="payment-icon">G Pay</div>
+          <div class="payment-icon">🔒 SSL</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-bottom" style="max-width:100%">
+      <div class="footer-copy">© 2025 FansFR</div>
+      <div class="footer-legal">
+        <button onclick="showPage('legal-cgv')">CGV</button>
+        <button onclick="showPage('legal-retour')">Retours</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ======================== PROFIL ======================== -->
+<div class="page" id="page-profile">
+  <div class="profile-page">
+    <div class="profile-header">
+      <div class="avatar">MJ</div>
+      <div>
+        <div class="profile-name">Marie Joubert</div>
+        <div class="profile-email">marie.joubert@email.fr</div>
+      </div>
+    </div>
+    <div class="profile-tabs">
+      <button class="profile-tab active" onclick="switchTab(this, 'tab-orders')">Commandes</button>
+      <button class="profile-tab" onclick="switchTab(this, 'tab-infos')">Informations</button>
+      <button class="profile-tab" onclick="switchTab(this, 'tab-wishlist')">Liste de souhaits</button>
+      <button class="profile-tab" onclick="switchTab(this, 'tab-notifs')">Notifications</button>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="tab-orders">
+      <div class="order-card">
+        <div class="order-card-head">
+          <div><div class="order-num">#FAN-2025-0142</div><div class="order-date">28 mai 2025</div></div>
+          <span class="status-badge shipped">Expédiée</span>
+        </div>
+        <div class="order-card-body">
+          <div class="order-item-row"><span>Tee Essential Noir — M</span><span>59,00 €</span></div>
+          <div class="order-item-row"><span>Livraison Colissimo</span><span>5,90 €</span></div>
+          <div class="tracker">
+            <div class="tracker-step"><div class="tracker-dot done">✓</div><div class="tracker-label">Confirmée</div></div>
+            <div class="tracker-step"><div class="tracker-dot done">✓</div><div class="tracker-label">Préparée</div></div>
+            <div class="tracker-step"><div class="tracker-dot current">→</div><div class="tracker-label">En transit</div></div>
+            <div class="tracker-step"><div class="tracker-dot"></div><div class="tracker-label">Livrée</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="order-card">
+        <div class="order-card-head">
+          <div><div class="order-num">#FAN-2025-0118</div><div class="order-date">12 avril 2025</div></div>
+          <span class="status-badge delivered">Livrée</span>
+        </div>
+        <div class="order-card-body">
+          <div class="order-item-row"><span>Sweat Premium Anthracite — L</span><span>89,00 €</span></div>
+          <div class="order-item-row"><span>Remise en main propre — Angers</span><span>Gratuit</span></div>
+          <div class="tracker">
+            <div class="tracker-step"><div class="tracker-dot done">✓</div><div class="tracker-label">Confirmée</div></div>
+            <div class="tracker-step"><div class="tracker-dot done">✓</div><div class="tracker-label">Préparée</div></div>
+            <div class="tracker-step"><div class="tracker-dot done">✓</div><div class="tracker-label">En transit</div></div>
+            <div class="tracker-step"><div class="tracker-dot done">✓</div><div class="tracker-label">Livrée</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFOS -->
+    <div id="tab-infos" style="display:none">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
+        <div class="form-group" style="--form-bg:var(--white)">
+          <label style="font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mid); display:block; margin-bottom:.4rem">Prénom</label>
+          <input style="width:100%; border:1px solid var(--light); border-radius:3px; padding:8px 12px; font-size:.9rem; font-family:'DM Sans',sans-serif; outline:none" value="Marie">
+        </div>
+        <div class="form-group">
+          <label style="font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mid); display:block; margin-bottom:.4rem">Nom</label>
+          <input style="width:100%; border:1px solid var(--light); border-radius:3px; padding:8px 12px; font-size:.9rem; font-family:'DM Sans',sans-serif; outline:none" value="Joubert">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label style="font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mid); display:block; margin-bottom:.4rem">Email</label>
+          <input style="width:100%; border:1px solid var(--light); border-radius:3px; padding:8px 12px; font-size:.9rem; font-family:'DM Sans',sans-serif; outline:none" value="marie.joubert@email.fr" type="email">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label style="font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mid); display:block; margin-bottom:.4rem">Adresse sauvegardée</label>
+          <input style="width:100%; border:1px solid var(--light); border-radius:3px; padding:8px 12px; font-size:.9rem; font-family:'DM Sans',sans-serif; outline:none" value="12 rue des Lilas, 49000 Angers">
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-top:1rem" onclick="showToast('✓ Informations mises à jour')">Sauvegarder</button>
+    </div>
+
+    <!-- WISHLIST -->
+    <div id="tab-wishlist" style="display:none">
+      <div class="product-grid" id="wishlistGrid"></div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="tab-notifs" style="display:none">
+      <div style="display:flex; flex-direction:column; gap:1rem; max-width:480px">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1rem; border:1px solid var(--light); border-radius:4px">
+          <div><div style="font-size:.9rem; font-weight:500">Alertes retour en stock</div><div style="font-size:.78rem; color:var(--mid); margin-top:2px">Être notifié quand un produit épuisé est disponible</div></div>
+          <label style="cursor:pointer; display:flex; align-items:center; gap:.5rem">
+            <input type="checkbox" checked style="accent-color:var(--black); transform:scale(1.3)">
+          </label>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1rem; border:1px solid var(--light); border-radius:4px">
+          <div><div style="font-size:.9rem; font-weight:500">Promotions et offres</div><div style="font-size:.78rem; color:var(--mid); margin-top:2px">Codes promo et ventes privées</div></div>
+          <label style="cursor:pointer; display:flex; align-items:center; gap:.5rem">
+            <input type="checkbox" style="accent-color:var(--black); transform:scale(1.3)">
+          </label>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1rem; border:1px solid var(--light); border-radius:4px">
+          <div><div style="font-size:.9rem; font-weight:500">Nouveautés</div><div style="font-size:.78rem; color:var(--mid); margin-top:2px">Nouveaux produits ajoutés à la boutique</div></div>
+          <label style="cursor:pointer; display:flex; align-items:center; gap:.5rem">
+            <input type="checkbox" checked style="accent-color:var(--black); transform:scale(1.3)">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-bottom" style="max-width:100%">
+      <div class="footer-copy">© 2025 FansFR</div>
+      <div class="footer-legal">
+        <button onclick="showPage('legal-cgv')">CGV</button>
+        <button onclick="showPage('legal-confidentialite')">Confidentialité</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ======================== ADMIN ======================== -->
+<div class="page" id="page-admin">
+  <div class="admin-layout">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-title">FansFR Admin</div>
+      <button class="admin-nav-btn active" onclick="switchAdminTab(this,'admin-dashboard')">📊 Tableau de bord</button>
+      <button class="admin-nav-btn" onclick="switchAdminTab(this,'admin-products')">👕 Produits</button>
+      <button class="admin-nav-btn" onclick="switchAdminTab(this,'admin-import')">📥 Import Sheets</button>
+      <button class="admin-nav-btn" onclick="switchAdminTab(this,'admin-orders')">📦 Commandes</button>
+      <button class="admin-nav-btn" onclick="switchAdminTab(this,'admin-suppliers')">🏭 Fournisseurs</button>
+      <div style="margin-top:auto; border-top:1px solid #222; padding-top:.75rem; margin-top:2rem">
+        <button class="admin-nav-btn" onclick="openModal('apiConfigModal')" style="color:#c9a84c">⚙️ Config APIs</button>
+      </div>
+    <div class="admin-main">
+
+      <!-- DASHBOARD -->
+      <div id="admin-dashboard">
+        <div class="admin-page-title">Tableau de bord</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Chiffre d'affaires</div>
+            <div class="stat-value">12 480 €</div>
+            <div class="stat-sub up">↑ +18% ce mois</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Marge globale</div>
+            <div class="stat-value">4 920 €</div>
+            <div class="stat-sub up">39,4% de marge</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Commandes</div>
+            <div class="stat-value">147</div>
+            <div class="stat-sub up">↑ +24 cette semaine</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Ruptures de stock</div>
+            <div class="stat-value">3</div>
+            <div class="stat-sub down">12 clients en attente</div>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-head">
+            <div class="admin-table-head-title">Commandes récentes</div>
+            <button class="admin-btn outline" onclick="switchAdminTab(document.querySelector('[onclick*=admin-orders]'), 'admin-orders')">Voir tout</button>
+          </div>
+          <table class="admin-table">
+            <thead><tr><th>Commande</th><th>Client</th><th>Montant</th><th>Livraison</th><th>Statut</th></tr></thead>
+            <tbody>
+              <tr><td>#FAN-2025-0152</td><td>Thomas D.</td><td>89,00 €</td><td>Colissimo</td><td><span class="status-badge pending">En attente</span></td></tr>
+              <tr><td>#FAN-2025-0151</td><td>Sophie M.</td><td>118,00 €</td><td>Point relais</td><td><span class="status-badge shipped">Expédiée</span></td></tr>
+              <tr><td>#FAN-2025-0150</td><td>Lucas R.</td><td>59,00 €</td><td>Main propre</td><td><span class="status-badge handover">Remis</span></td></tr>
+              <tr><td>#FAN-2025-0149</td><td>Emma K.</td><td>178,00 €</td><td>Colissimo</td><td><span class="status-badge delivered">Livrée</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-head">
+            <div class="admin-table-head-title">Alertes retour en stock (12 clients)</div>
+            <button class="admin-btn" onclick="showToast('📧 Emails envoyés à 12 clients !')">Envoyer les notifications</button>
+          </div>
+          <table class="admin-table">
+            <thead><tr><th>Produit</th><th>Variante</th><th>Clients en attente</th><th>Stock actuel</th></tr></thead>
+            <tbody>
+              <tr><td>Tee Premium Blanc</td><td>S</td><td>5</td><td><span style="color:#a32d2d">0</span></td></tr>
+              <tr><td>Veste Coach Noir</td><td>XL</td><td>4</td><td><span style="color:#a32d2d">0</span></td></tr>
+              <tr><td>Sweat Zip Anthracite</td><td>M</td><td>3</td><td><span style="color:#a32d2d">0</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div id="admin-products" style="display:none">
+        <div class="admin-page-title">Gestion des produits</div>
+        <div class="admin-table-wrap" style="margin-bottom:1.5rem">
+          <div class="admin-table-head">
+            <div class="admin-table-head-title">Catalogue (8 produits)</div>
+            <button class="admin-btn" onclick="showToast('✓ Nouveau produit créé')">+ Nouveau produit</button>
+          </div>
+          <table class="admin-table">
+            <thead><tr><th>Produit</th><th>Prix vente</th><th>Prix achat</th><th>Marge</th><th>Stock</th><th>Actions</th></tr></thead>
+            <tbody id="adminProductTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- IMPORT -->
+      <div id="admin-import" style="display:none">
+        <div class="admin-page-title">Import Google Sheets / CSV / XLSX</div>
+        <div style="margin-bottom:1rem">
+          <label class="form-label">Lien Google Sheet (partagé publiquement)</label>
+          <div style="display:flex;gap:.5rem">
+            <input class="form-input" id="gsheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1">
+            <button class="admin-btn" onclick="importFromGoogleSheets()">Importer</button>
+          </div>
+        </div>
+        <div style="text-align:center;color:#555;font-size:.8rem;padding:.75rem 0">— ou —</div>
+        <div class="import-zone" id="importDropZone" ondrop="handleFileDrop(event)" ondragover="event.preventDefault()" onclick="document.getElementById('importFileInput').click()">
+          <input type="file" id="importFileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(event)">
+          <div style="font-size:2rem">📊</div>
+          <p>Glissez un fichier CSV/XLSX ici ou cliquez pour sélectionner</p>
+          <p style="font-size:.75rem; margin-top:.5rem; color:#444">Colonnes reconnues : nom, description, prix_vente, prix_achat, fournisseur, couleurs, tailles, stock, images</p>
+        </div>
+        <div id="importProgressWrap" style="display:none" class="import-progress">
+          <div style="font-size:.8rem;color:#aaa">Lecture en cours…</div>
+          <div class="import-bar-wrap"><div class="import-bar" id="importBar" style="width:0%"></div></div>
+        </div>
+        <div id="importPreview" style="display:none">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem">
+            <div style="font-size:.85rem; color:#aaa">Prévisualisation — 3 produits détectés</div>
+            <div style="display:flex; gap:.5rem">
+              <button class="admin-btn outline" onclick="document.getElementById('importPreview').style.display='none'">Annuler</button>
+              <button class="admin-btn" onclick="showToast('✓ 3 produits importés et publiés !')">Valider et publier</button>
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Nom</th><th>Prix vente</th><th>Prix achat</th><th>Couleurs</th><th>Stock</th></tr></thead>
+              <tbody>
+                <tr><td>Tee Linen Ecru</td><td>65,00 €</td><td>22,00 €</td><td>Ecru, Beige</td><td>30</td></tr>
+                <tr><td>Short Cargo Kaki</td><td>79,00 €</td><td>28,00 €</td><td>Kaki, Noir</td><td>20</td></tr>
+                <tr><td>Casquette Logo Or</td><td>39,00 €</td><td>11,00 €</td><td>Noir/Or</td><td>50</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS ADMIN -->
+      <div id="admin-orders" style="display:none">
+        <div class="admin-page-title">Gestion des commandes</div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-head">
+            <div class="admin-table-head-title">Toutes les commandes</div>
+            <button class="admin-btn" onclick="showToast('📥 Export CSV en cours...')">Exporter CSV</button>
+          </div>
+          <table class="admin-table">
+            <thead><tr><th>N°</th><th>Client</th><th>Total</th><th>Livraison</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td>#FAN-0152</td><td>Thomas D.</td><td>89,00 €</td><td>Colissimo</td><td><span class="status-badge pending">En attente</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('🚚 Expédition marquée + étiquette générée')">Expédier</button></td></tr>
+              <tr><td>#FAN-0151</td><td>Sophie M.</td><td>118,00 €</td><td>Point relais</td><td><span class="status-badge shipped">Expédiée</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('🏷️ Étiquette Boxtal téléchargée')">Étiquette</button></td></tr>
+              <tr><td>#FAN-0150</td><td>Lucas R.</td><td>59,00 €</td><td>Main propre</td><td><span class="status-badge handover">Remis</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('✓ Commande clôturée')">Clôturer</button></td></tr>
+              <tr><td>#FAN-0149</td><td>Emma K.</td><td>178,00 €</td><td>Colissimo</td><td><span class="status-badge delivered">Livrée</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('📄 Facture téléchargée')">Facture</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUPPLIERS -->
+      <div id="admin-suppliers" style="display:none">
+        <div class="admin-page-title">Fournisseurs</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
+          <div class="stat-card" style="border:1px solid #2a2a2a">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem">
+              <div>
+                <div style="font-size:.9rem; font-weight:500; color:var(--white)">TextilePro SAS</div>
+                <div style="font-size:.72rem; color:#666; margin-top:2px">contact@textilepro.fr</div>
+              </div>
+              <span class="status-badge delivered" style="font-size:.65rem">Actif</span>
+            </div>
+            <div style="font-size:.78rem; color:#777">Délai moyen : <strong style="color:#aaa">5 jours</strong></div>
+            <div style="font-size:.78rem; color:#777; margin-top:.3rem">Produits : 12 références</div>
+            <div style="font-size:.78rem; color:#777; margin-top:.3rem">CA total acheté : 8 240 €</div>
+          </div>
+          <div class="stat-card" style="border:1px solid #2a2a2a">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem">
+              <div>
+                <div style="font-size:.9rem; font-weight:500; color:var(--white)">ModaSource Italy</div>
+                <div style="font-size:.72rem; color:#666; margin-top:2px">orders@modasource.it</div>
+              </div>
+              <span class="status-badge shipped" style="font-size:.65rem">Actif</span>
+            </div>
+            <div style="font-size:.78rem; color:#777">Délai moyen : <strong style="color:#aaa">9 jours</strong></div>
+            <div style="font-size:.78rem; color:#777; margin-top:.3rem">Produits : 5 références</div>
+            <div style="font-size:.78rem; color:#777; margin-top:.3rem">CA total acheté : 3 120 €</div>
+          </div>
+        </div>
+        <button class="admin-btn" style="margin-top:1rem" onclick="showToast('✓ Fiche fournisseur créée')">+ Nouveau fournisseur</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ======================== AUTH ======================== -->
+<div class="page" id="page-auth">
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">Fans<span>FR</span></div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Connexion</button>
+        <button class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')">Inscription</button>
+      </div>
+      <!-- LOGIN -->
+      <div id="auth-login-form">
+        <div class="auth-field">
+          <label class="auth-label">Email</label>
+          <input type="email" class="auth-input" id="loginEmail" placeholder="votre@email.fr">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Mot de passe</label>
+          <input type="password" class="auth-input" id="loginPassword" placeholder="••••••••">
+        </div>
+        <button class="auth-submit" id="loginBtn" onclick="supabaseLogin()">Se connecter →</button>
+        <div class="auth-divider">ou continuer avec</div>
+        <div class="auth-social">
+          <button class="auth-social-btn" onclick="showToast('🔜 Google OAuth — configurez dans Supabase Auth')">🔵 Google</button>
+          <button class="auth-social-btn" onclick="showToast('🔜 Apple Sign In — configurez dans Supabase Auth')">🍎 Apple</button>
+        </div>
+        <div style="text-align:center; margin-top:.5rem">
+          <button style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--mid);text-decoration:underline" onclick="showToast('📧 Email de réinitialisation envoyé')">Mot de passe oublié ?</button>
+        </div>
+        <div style="text-align:center;margin-top:1rem;font-size:.75rem;color:var(--mid)">
+          Mode démo : cliquez "Se connecter" sans Supabase pour tester l'interface.
+        </div>
+      </div>
+      <!-- SIGNUP -->
+      <div id="auth-signup-form" style="display:none">
+        <div class="auth-field">
+          <label class="auth-label">Prénom</label>
+          <input type="text" class="auth-input" id="signupFirstname" placeholder="Marie">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Email</label>
+          <input type="email" class="auth-input" id="signupEmail" placeholder="votre@email.fr">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Mot de passe</label>
+          <input type="password" class="auth-input" id="signupPassword" placeholder="8 caractères minimum">
+        </div>
+        <div class="auth-field">
+          <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.8rem;cursor:pointer;color:var(--mid)">
+            <input type="checkbox" id="signupAcceptCgv" style="margin-top:2px;accent-color:var(--black)">
+            J'accepte les <button onclick="showPage('legal-cgv')" style="background:none;border:none;cursor:pointer;color:var(--black);text-decoration:underline;font-size:inherit;padding:0;margin:0 3px">CGV</button> et la <button onclick="showPage('legal-confidentialite')" style="background:none;border:none;cursor:pointer;color:var(--black);text-decoration:underline;font-size:inherit;padding:0;margin:0 3px">politique de confidentialité</button>
+          </label>
+        </div>
+        <button class="auth-submit" id="signupBtn" onclick="supabaseSignup()">Créer mon compte →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== CONFIRMATION ======================== -->
+<div class="page" id="page-confirmation">
+  <div class="confirmation-page">
+    <div class="confirmation-icon">🎉</div>
+    <h1 class="confirmation-title">Commande confirmée !</h1>
+    <p class="confirmation-sub">Un email de confirmation a été envoyé à votre adresse.</p>
+    <div id="conf-delivery"></div>
+    <div class="confirmation-box">
+      <div class="confirmation-box-title">Récapitulatif de commande</div>
+      <div id="conf-items"></div>
+    </div>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="showPage('home')">Retour à la boutique</button>
+      <button class="btn-outline" style="color:var(--black);border-color:var(--light)" onclick="showPage('profile')">Suivre ma commande</button>
+    </div>
+  </div>
+  <footer><div class="footer-bottom" style="max-width:100%"><div class="footer-copy">© 2025 FansFR</div></div></footer>
+</div>
+
+<!-- ======================== LEGAL PAGES ======================== -->
+<div class="page" id="page-legal-cgv">
+  <div class="legal-page">
+    <h1>Conditions Générales de Vente</h1>
+    <p class="legal-updated">En vigueur au 1er janvier 2025</p>
+    <h2>Article 1 — Objet</h2>
+    <p>Les présentes CGV régissent les relations contractuelles entre la société FansFR (SIRET 123 456 789 00012) et tout client effectuant un achat sur le site fansfr.fr. Toute commande implique l'acceptation pleine et entière des présentes CGV.</p>
+    <h2>Article 2 — Produits</h2>
+    <p>Les produits proposés sont conformes à la législation française et aux normes applicables. Les photographies et descriptions sont fournies à titre indicatif. FansFR se réserve le droit de modifier son catalogue à tout moment.</p>
+    <h2>Article 3 — Prix</h2>
+    <p>Les prix sont indiqués en euros TTC (TVA 20%). Les frais de livraison sont calculés et affichés avant validation de la commande. FansFR se réserve le droit de modifier ses prix à tout moment.</p>
+    <h2>Article 4 — Commande et paiement</h2>
+    <p>Le paiement est sécurisé via Stripe. Les données bancaires ne sont jamais stockées sur nos serveurs. La commande est confirmée par email après validation du paiement.</p>
+    <h2>Article 5 — Livraison</h2>
+    <p>Les délais de livraison sont donnés à titre indicatif. FansFR ne saurait être tenu responsable des retards dus aux transporteurs. La livraison en main propre sur Angers est disponible gratuitement sur rendez-vous.</p>
+    <h2>Article 6 — Droit de rétractation</h2>
+    <p>Conformément à l'article L.221-18 du Code de la Consommation, vous disposez d'un délai de 14 jours à compter de la réception pour exercer votre droit de rétractation, sans avoir à justifier de motifs ni à payer de pénalités.</p>
+  </div>
+  <footer><div class="footer-bottom" style="max-width:100%"><div class="footer-copy">© 2025 FansFR</div><div class="footer-legal"><button onclick="showPage('legal-mentions')">Mentions légales</button><button onclick="showPage('legal-confidentialite')">Confidentialité</button></div></div></footer>
+</div>
+
+<div class="page" id="page-legal-mentions">
+  <div class="legal-page">
+    <h1>Mentions Légales</h1>
+    <p class="legal-updated">Conformément à la loi n°2004-575 du 21 juin 2004</p>
+    <h2>Éditeur du site</h2>
+    <p><strong>Raison sociale :</strong> FansFR<br><strong>Forme juridique :</strong> SASU<br><strong>SIRET :</strong> 123 456 789 00012<br><strong>Siège social :</strong> 10 Rue du Commerce, 49000 Angers, France<br><strong>Responsable de publication :</strong> [Nom du gérant]<br><strong>Email :</strong> contact@fansfr.fr</p>
+    <h2>Hébergement</h2>
+    <p>Site hébergé par Vercel Inc., 340 Pine Street, Suite 1404, San Francisco, CA 94104, USA. Base de données : Supabase Inc.</p>
+    <h2>Propriété intellectuelle</h2>
+    <p>L'ensemble des contenus (textes, images, logos) du site fansfr.fr est protégé par le droit d'auteur. Toute reproduction sans autorisation expresse est interdite.</p>
+  </div>
+  <footer><div class="footer-bottom" style="max-width:100%"><div class="footer-copy">© 2025 FansFR</div></div></footer>
+</div>
+
+<div class="page" id="page-legal-confidentialite">
+  <div class="legal-page">
+    <h1>Politique de Confidentialité</h1>
+    <p class="legal-updated">Conforme au RGPD (Règlement UE 2016/679)</p>
+    <h2>Données collectées</h2>
+    <p>FansFR collecte uniquement les données nécessaires à la gestion de votre compte et de vos commandes : nom, prénom, email, adresse de livraison, historique d'achats. Les données bancaires sont traitées exclusivement par Stripe et ne transitent jamais par nos serveurs.</p>
+    <h2>Finalités du traitement</h2>
+    <p>Vos données sont utilisées pour : traiter vos commandes, vous envoyer des emails transactionnels (confirmation, suivi), gérer les alertes de retour en stock avec votre consentement, améliorer nos services.</p>
+    <h2>Durée de conservation</h2>
+    <p>Les données de commande sont conservées 10 ans conformément aux obligations légales. Les données de compte sont conservées jusqu'à la suppression de votre compte ou pendant 3 ans d'inactivité.</p>
+    <h2>Vos droits</h2>
+    <p>Conformément au RGPD, vous disposez des droits d'accès, rectification, effacement, portabilité et opposition. Contactez : dpo@fansfr.fr</p>
+    <h2>Cookies</h2>
+    <p>Nous utilisons des cookies techniques (indispensables au fonctionnement du site) et des cookies analytiques (avec votre consentement). Voir notre <button onclick="showPage('legal-cookies')" style="background:none; border:none; cursor:pointer; color:var(--black); text-decoration:underline; font-size:inherit">politique cookies</button>.</p>
+  </div>
+  <footer><div class="footer-bottom" style="max-width:100%"><div class="footer-copy">© 2025 FansFR</div></div></footer>
+</div>
+
+<div class="page" id="page-legal-cookies">
+  <div class="legal-page">
+    <h1>Gestion des Cookies</h1>
+    <p class="legal-updated">Conformément à la directive ePrivacy et aux recommandations CNIL</p>
+    <h2>Cookies strictement nécessaires</h2>
+    <p>Ces cookies assurent le bon fonctionnement du site (session, panier, authentification). Ils ne peuvent pas être désactivés.</p>
+    <h2>Cookies analytiques</h2>
+    <p>Avec votre consentement, nous utilisons des outils d'analyse anonymisés pour comprendre comment vous naviguez sur notre site et améliorer votre expérience.</p>
+    <h2>Cookies marketing</h2>
+    <p>FansFR ne vend pas vos données à des tiers et n'utilise pas de cookies de reciblage publicitaire tiers.</p>
+    <h2>Gérer vos préférences</h2>
+    <div style="display:flex; flex-direction:column; gap:.75rem; margin-top:1rem">
+      <label style="display:flex; align-items:center; gap:.75rem; font-size:.88rem"><input type="checkbox" checked disabled> Cookies techniques (obligatoires)</label>
+      <label style="display:flex; align-items:center; gap:.75rem; font-size:.88rem; cursor:pointer"><input type="checkbox" id="analyticsCookie"> Cookies analytiques</label>
+    </div>
+    <button class="btn-primary" style="margin-top:1.5rem" onclick="showToast('✓ Préférences cookies sauvegardées')">Sauvegarder mes préférences</button>
+  </div>
+  <footer><div class="footer-bottom" style="max-width:100%"><div class="footer-copy">© 2025 FansFR</div></div></footer>
+</div>
+
+<div class="page" id="page-legal-retour">
+  <div class="legal-page">
+    <h1>Politique de Retour et Rétractation</h1>
+    <p class="legal-updated">Conformément à l'article L.221-18 du Code de la Consommation</p>
+    <h2>Droit de rétractation — 14 jours</h2>
+    <p>Vous disposez d'un délai de <strong>14 jours calendaires</strong> à compter de la réception de votre commande pour exercer votre droit de rétractation, sans avoir à justifier de motifs ni à payer de pénalités.</p>
+    <h2>Modalités de retour</h2>
+    <p>Pour initier un retour, contactez-nous à retours@fansfr.fr avec votre numéro de commande. Nous vous enverrons une étiquette de retour prépayée. Les articles doivent être retournés dans leur état d'origine avec leurs étiquettes.</p>
+    <h2>Remboursement</h2>
+    <p>Le remboursement est effectué dans les <strong>14 jours</strong> suivant la réception des articles retournés, via le moyen de paiement original.</p>
+    <h2>Articles non remboursables</h2>
+    <p>Les articles personnalisés, les sous-vêtements et les articles marqués "Vente finale" ne sont pas éligibles au retour pour des raisons d'hygiène ou de nature du produit.</p>
+  </div>
+  <footer><div class="footer-bottom" style="max-width:100%"><div class="footer-copy">© 2025 FansFR</div></div></footer>
+</div>
+
+<script>
+// ============================================================
+// FANSFR v4 — COUCHE API VERCEL
+// Toutes les clés secrètes vivent dans les variables d'env Vercel.
+// Le frontend n'a plus besoin de Resend, Sendcloud, Google Sheets keys.
+// ============================================================
+
+// -------- CONFIG (côté client — uniquement clés publiques) --------
+// NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY et NEXT_PUBLIC_SUPABASE_* sont injectées
+// par Next.js. Dans ce fichier HTML standalone, on les lit depuis le localStorage
+// ou on les hard-code après déploiement.
+const API_CONFIG = {
+  get supabaseUrl()  { return localStorage.getItem('fansfr_supabase_url') || '' },
+  get supabaseKey()  { return localStorage.getItem('fansfr_supabase_key') || '' },
+  // Stripe publishable key (pk_live_... ou pk_test_...) — sans danger côté client
+  get stripeKey()    { return localStorage.getItem('fansfr_stripe_key') || '' },
+  // Clé admin locale pour les routes protégées /api/save-product, /api/admin-stats
+  get adminKey()     { return localStorage.getItem('fansfr_admin_key') || '' },
+  // Les clés Resend, Sendcloud, Google Sheets ne sont PLUS nécessaires côté client
+  // Elles vivent dans les variables d'environnement Vercel (côté serveur uniquement)
+};
+
+function saveAllApiConfig() {
+  const url   = document.getElementById('cfg-supabase-url')?.value.trim() || '';
+  const key   = document.getElementById('cfg-supabase-key')?.value.trim() || '';
+  const sk    = document.getElementById('cfg-stripe-key')?.value.trim() || '';
+  const admin = document.getElementById('cfg-admin-key')?.value.trim() || '';
+  if (url)   localStorage.setItem('fansfr_supabase_url', url);
+  if (key)   localStorage.setItem('fansfr_supabase_key', key);
+  if (sk)    localStorage.setItem('fansfr_stripe_key', sk);
+  if (admin) localStorage.setItem('fansfr_admin_key', admin);
+  closeModal('apiConfigModal');
+  showToast('✓ Configuration sauvegardée');
+  updateApiStatusBadges();
+  loadStripeIfConfigured();
+}
+
+function loadApiConfigInputs() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  set('cfg-supabase-url', API_CONFIG.supabaseUrl);
+  set('cfg-supabase-key', API_CONFIG.supabaseKey);
+  set('cfg-stripe-key',   API_CONFIG.stripeKey);
+  set('cfg-admin-key',    API_CONFIG.adminKey);
+  // Les champs Resend/Sendcloud/GSheets sont affichés en lecture seule (config serveur)
+  ['cfg-resend-key','cfg-resend-from','cfg-sendcloud-pub','cfg-sendcloud-sec','cfg-gsheets-key']
+    .forEach(id => { const el = document.getElementById(id); if (el) { el.value = '*** configuré côté serveur (Vercel) ***'; el.disabled = true; el.style.color = '#888'; } });
+  updateApiStatusBadges();
+}
+
+function setStatus(id, state, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'api-status ' + state;
+  el.textContent = label;
+}
+
+function updateApiStatusBadges() {
+  setStatus('supabase-status',  API_CONFIG.supabaseUrl ? 'connected' : 'unconfigured', API_CONFIG.supabaseUrl ? '● Configuré' : '○ Non configuré');
+  setStatus('stripe-status',    API_CONFIG.stripeKey   ? 'connected' : 'unconfigured', API_CONFIG.stripeKey   ? '● Configuré' : '○ Non configuré');
+  // Ces services sont configurés côté serveur Vercel — toujours afficher "Serveur"
+  setStatus('resend-status',    'connected', '● Serveur Vercel');
+  setStatus('sendcloud-status', 'connected', '● Serveur Vercel');
+  setStatus('gsheets-status',   'connected', '● Serveur Vercel');
+}
+
+// -------- SUPABASE CLIENT --------
+function getSupabase() {
+  if (!API_CONFIG.supabaseUrl || !API_CONFIG.supabaseKey) return null;
+  return {
+    url: API_CONFIG.supabaseUrl,
+    key: API_CONFIG.supabaseKey,
+    async query(table, opts = {}) {
+      let url = `${this.url}/rest/v1/${table}`;
+      const params = [];
+      if (opts.select)  params.push(`select=${opts.select}`);
+      if (opts.filter)  params.push(opts.filter);
+      if (opts.order)   params.push(`order=${opts.order}`);
+      if (opts.limit)   params.push(`limit=${opts.limit}`);
+      if (params.length) url += '?' + params.join('&');
+      const r = await fetch(url, {
+        headers: { 'apikey': this.key, 'Authorization': `Bearer ${this.key}`, 'Content-Type': 'application/json' }
+      });
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    },
+    async insert(table, data) {
+      const r = await fetch(`${this.url}/rest/v1/${table}`, {
+        method: 'POST',
+        headers: { 'apikey': this.key, 'Authorization': `Bearer ${this.key}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(data)
+      });
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    },
+    async update(table, data, filter) {
+      const r = await fetch(`${this.url}/rest/v1/${table}?${filter}`, {
+        method: 'PATCH',
+        headers: { 'apikey': this.key, 'Authorization': `Bearer ${this.key}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(data)
+      });
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    },
+    async signUp(email, password) {
+      const r = await fetch(`${this.url}/auth/v1/signup`, {
+        method: 'POST',
+        headers: { 'apikey': this.key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      return r.json();
+    },
+    async signIn(email, password) {
+      const r = await fetch(`${this.url}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { 'apikey': this.key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      return r.json();
+    },
+    async signOut(accessToken) {
+      await fetch(`${this.url}/auth/v1/logout`, {
+        method: 'POST',
+        headers: { 'apikey': this.key, 'Authorization': `Bearer ${accessToken}` }
+      });
+    },
+    // callEdgeFunction supprimé — tous les appels passent par /api/* (Next.js Vercel)
+  };
+}
+
+async function saveAndTestSupabase() {
+  const url = document.getElementById('cfg-supabase-url').value.trim();
+  const key = document.getElementById('cfg-supabase-key').value.trim();
+  if (!url || !key) { showToast('⚠️ Renseignez l\'URL et la clé Supabase'); return; }
+  try {
+    const r = await fetch(`${url}/rest/v1/`, { headers: { 'apikey': key } });
+    if (r.ok || r.status === 200) {
+      setStatus('supabase-status', 'connected', '✓ Connecté');
+      showToast('✓ Supabase connecté avec succès !');
+    } else {
+      setStatus('supabase-status', 'error', '✗ Erreur ' + r.status);
+      showToast('✗ Erreur Supabase: ' + r.status);
+    }
+  } catch(e) {
+    setStatus('supabase-status', 'error', '✗ Inaccessible');
+    showToast('✗ Supabase inaccessible: ' + e.message);
+  }
+}
+
+// -------- AUTH SUPABASE --------
+let currentUser = null;
+let accessToken = null;
+
+async function supabaseLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const sb = getSupabase();
+  if (!sb) { showToast('⚠️ Supabase non configuré — connexion simulée'); simulateLogin(email); return; }
+  const btnEl = document.getElementById('loginBtn');
+  btnEl.innerHTML = '<span class="spinner"></span>';
+  try {
+    const data = await sb.signIn(email, password);
+    if (data.access_token) {
+      accessToken = data.access_token;
+      currentUser = data.user;
+      localStorage.setItem('fansfr_session', JSON.stringify({ token: accessToken, user: currentUser }));
+      onLoginSuccess(currentUser);
+    } else {
+      showToast('✗ ' + (data.error_description || data.msg || 'Email ou mot de passe invalide'));
+    }
+  } catch(e) {
+    showToast('✗ Erreur: ' + e.message);
+  } finally {
+    btnEl.textContent = 'Se connecter →';
+  }
+}
+
+async function supabaseSignup() {
+  const email = document.getElementById('signupEmail').value;
+  const password = document.getElementById('signupPassword').value;
+  const sb = getSupabase();
+  if (!sb) { showToast('⚠️ Supabase non configuré — inscription simulée'); simulateLogin(email); return; }
+  const btnEl = document.getElementById('signupBtn');
+  btnEl.innerHTML = '<span class="spinner"></span>';
+  try {
+    const data = await sb.signUp(email, password);
+    if (data.id || data.user) {
+      showToast('✓ Compte créé ! Vérifiez votre email.');
+    } else {
+      showToast('✗ ' + (data.error_description || data.msg || 'Erreur lors de l\'inscription'));
+    }
+  } catch(e) {
+    showToast('✗ Erreur: ' + e.message);
+  } finally {
+    btnEl.textContent = 'Créer mon compte →';
+  }
+}
+
+function simulateLogin(email) {
+  currentUser = { email, id: 'demo-user', user_metadata: { name: email.split('@')[0] } };
+  onLoginSuccess(currentUser);
+}
+
+function onLoginSuccess(user) {
+  showPage('profile');
+  const name = user.user_metadata?.name || user.email.split('@')[0];
+  document.querySelector('.profile-name').textContent = name;
+  document.querySelector('.profile-email').textContent = user.email;
+  document.getElementById('authBtn').textContent = '👤';
+  showToast('✓ Connecté en tant que ' + user.email);
+}
+
+async function supabaseLogout() {
+  const sb = getSupabase();
+  if (sb && accessToken) await sb.signOut(accessToken);
+  currentUser = null; accessToken = null;
+  localStorage.removeItem('fansfr_session');
+  showToast('✓ Déconnecté');
+  showPage('home');
+}
+
+function restoreSession() {
+  const raw = localStorage.getItem('fansfr_session');
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    if (s.token && s.user) { accessToken = s.token; currentUser = s.user; }
+  } catch(e) {}
+}
+
+// -------- STRIPE --------
+let stripeInstance = null;
+
+function loadStripeIfConfigured() {
+  // Récupérer la publishable key : depuis API_CONFIG (localStorage) ou meta tag Next.js
+  const pk = API_CONFIG.stripeKey
+    || document.querySelector('meta[name="stripe-pk"]')?.content
+    || '';
+  if (!pk) return;
+  if (window.Stripe) { stripeInstance = Stripe(pk); return; }
+  const script = document.createElement('script');
+  script.src = 'https://js.stripe.com/v3/';
+  script.onload = () => { stripeInstance = Stripe(pk); };
+  document.head.appendChild(script);
+}
+
+async function openStripeCheckout() {
+  if (shippingCost === null) { showToast('⚠️ Sélectionnez un mode de livraison'); return; }
+  const sub = cart.reduce((s,i) => s + i.price*i.qty, 0);
+  const disc = promoApplied ? sub * 0.1 : 0;
+
+  showToast('⏳ Redirection vers Stripe…');
+  try {
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        line_items: cart.map(i => ({ name: i.name, amount: Math.round(i.price * 100), qty: i.qty })),
+        shipping_cost: Math.round(shippingCost * 100),
+        discount: disc > 0 ? Math.round(disc * 100) : 0,
+        success_url: window.location.href + '?order=success',
+        cancel_url: window.location.href,
+        customer_email: currentUser?.email || '',
+      })
+    });
+    const data = await res.json();
+    if (data.url) { window.location.href = data.url; return; }
+    console.error('Stripe checkout error:', data.error);
+  } catch(e) { console.error('Stripe fetch error:', e); }
+  // Fallback mode démo
+  openModal('checkoutModal');
+}
+
+// -------- RESEND (emails) --------
+async function sendEmail({ to, subject, html }) {
+  // Appel vers /api/send-email (Next.js) — la clé Resend reste côté serveur
+  try {
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, type: 'custom', html })
+    });
+    return res.json();
+  } catch(e) {
+    console.log('[send-email erreur]', e.message);
+    return { id: 'failed', error: e.message };
+  }
+}
+
+function buildConfirmationEmail({ orderRef, items, total, shipping, deliveryMode, slot, relayPoint }) {
+  const itemsHtml = items.map(i => `<tr><td style="padding:4px 0">${i.name} × ${i.qty}</td><td style="text-align:right">${(i.price*i.qty).toFixed(2)} €</td></tr>`).join('');
+  let deliveryBlock = '';
+  if (deliveryMode === 'main-propre') {
+    deliveryBlock = `<div style="background:#fdf9f0;border:1px solid #c9a84c;border-radius:6px;padding:12px;margin-top:16px"><strong style="color:#c9a84c">Remise en main propre — Angers</strong><br>Créneau : ${slot || 'À confirmer'}</div>`;
+  } else if (deliveryMode === 'relais') {
+    deliveryBlock = `<div style="background:#f4f4f0;border-radius:6px;padding:12px;margin-top:16px"><strong>Point relais</strong><br>${relayPoint?.name || ''} — ${relayPoint?.address || ''}</div>`;
+  } else {
+    deliveryBlock = `<div style="background:#f4f4f0;border-radius:6px;padding:12px;margin-top:16px"><strong>Livraison à domicile</strong><br>Colissimo — Délai estimé : 2-4 jours ouvrés</div>`;
+  }
+  return `
+    <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff">
+      <div style="background:#0a0a0a;padding:24px;text-align:center">
+        <h1 style="color:#fafaf8;font-size:24px;margin:0;letter-spacing:.08em">Fans<span style="color:#c9a84c">FR</span></h1>
+        <p style="color:#666;font-size:12px;margin:4px 0 0">Votre commande est confirmée ✓</p>
+      </div>
+      <div style="padding:32px 24px">
+        <h2 style="font-size:18px;margin:0 0 8px">Merci pour votre commande !</h2>
+        <p style="color:#666;font-size:14px">Référence : <strong>${orderRef}</strong></p>
+        <table style="width:100%;border-collapse:collapse;margin:24px 0;font-size:14px">${itemsHtml}
+          <tr style="border-top:1px solid #eee"><td style="padding-top:8px"><strong>Total</strong></td><td style="text-align:right;padding-top:8px"><strong>${total} €</strong></td></tr>
+        </table>
+        ${deliveryBlock}
+        <p style="margin-top:24px;font-size:12px;color:#999">Pour toute question : contact@fansfr.fr · Retours sous 14 jours</p>
+      </div>
+      <div style="background:#f4f4f0;padding:16px;text-align:center;font-size:11px;color:#999">
+        © 2025 FansFR SASU — SIRET 123 456 789 00012 — Angers, France
+      </div>
+    </div>`;
+}
+
+async function sendOrderConfirmationEmail(orderData) {
+  const html = buildConfirmationEmail(orderData);
+  await sendEmail({ to: orderData.email || currentUser?.email || 'client@fansfr.fr', subject: `Commande confirmée ${orderData.orderRef} — FansFR`, html });
+}
+
+// -------- STOCK NOTIFICATIONS --------
+async function submitNotify() {
+  const email = document.getElementById('notifyEmail').value;
+  const productName = document.querySelector('.product-detail-name')?.textContent || 'Produit';
+  if (!email) return;
+  try {
+    await fetch('/api/stock-alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, product_name: productName, product_id: currentProductId || null })
+    });
+  } catch(e) { console.error('stock alert error:', e); }
+  document.getElementById('notifyForm').classList.remove('show');
+  showToast('🔔 Vous serez alerté à ' + email);
+}
+
+async function sendStockNotifications(productId, productName) {
+  // Déclenche les notifications via /api/stock-alerts (action trigger)
+  const adminKey = localStorage.getItem('fansfr_admin_key') || '';
+  try {
+    const res = await fetch('/api/stock-alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'trigger', product_id: productId, product_name: productName, admin_key: adminKey })
+    });
+    const data = await res.json();
+    showToast(`📧 ${data.sent || 0} email(s) de notification envoyé(s)`);
+  } catch(e) {
+    console.error('sendStockNotifications error:', e);
+    showToast('✗ Erreur lors de l'envoi des notifications');
+  }
+}
+
+// -------- COMMANDES --------
+async function saveOrder(orderData) {
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+      },
+      body: JSON.stringify({
+        items: orderData.items,
+        total: orderData.totalCents / 100,
+        shipping_mode: orderData.deliveryMode,
+        shipping_address: orderData.address || null,
+        relay_point_id: orderData.relayPoint?.id || null,
+        relay_point_name: orderData.relayPoint?.name || null,
+        slot: orderData.slot || null,
+        customer_email: orderData.email || currentUser?.email || '',
+      })
+    });
+    const data = await res.json();
+    return data.order || { ref: data.ref || ('FAN-' + Date.now()) };
+  } catch(e) {
+    console.error('saveOrder error:', e);
+    return { ref: 'FAN-' + Date.now() };
+  }
+}
+
+async function loadOrders() {
+  if (!currentUser || !accessToken) return [];
+  try {
+    const res = await fetch('/api/orders', {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    const data = await res.json();
+    return data.orders || [];
+  } catch(e) { return []; }
+}
+
+async function loadProducts() {
+  try {
+    const res = await fetch('/api/products?sort=newest&limit=48');
+    const data = await res.json();
+    if (data.products && data.products.length) {
+      PRODUCTS.length = 0;
+      data.products.forEach(p => PRODUCTS.push(p));
+      showToast('✓ Catalogue chargé (' + data.products.length + ' produits)');
+    }
+  } catch(e) { console.error('loadProducts error:', e); }
+  return PRODUCTS;
+}
+
+// -------- SENDCLOUD / BOXTAL (Points relais) --------
+const RELAY_POINTS_DEMO = [
+  { id:'PR1', name:'Tabac Presse Jean Jaurès', address:'12 Boulevard Jean Jaurès, 49000 Angers', network:'Mondial Relay', hours:'Lun-Sam 8h-20h', distance:'0.3 km', lat:'25%', top:'48%' },
+  { id:'PR2', name:'InPost — Superette Casino', address:'44 Rue de Rennes, 49000 Angers',       network:'InPost Locker',  hours:'24h/24 7j/7',    distance:'0.7 km', lat:'54%', top:'65%' },
+  { id:'PR3', name:'Bureau de Poste Angers Centre', address:'1 Rue Franklin Roosevelt, 49000 Angers', network:'Colissimo', hours:'Lun-Ven 8h30-18h', distance:'1.1 km', lat:'75%', top:'42%' },
+  { id:'PR4', name:'Mondial Relay — Pharmacie Vaillant', address:'86 Rue du Mail, 49000 Angers', network:'Mondial Relay', hours:'Lun-Sam 9h-19h30', distance:'1.4 km', lat:'40%', top:'30%' },
+];
+
+async function searchRelaysAPI(postalCode) {
+  // Proxy sécurisé via /api/relay-points — les clés Sendcloud restent côté serveur
+  try {
+    const r = await fetch(`/api/relay-points?postal_code=${encodeURIComponent(postalCode)}&country=FR`);
+    const data = await r.json();
+    renderRelayList(data.points || RELAY_POINTS_DEMO);
+  } catch(e) {
+    console.error('relay-points error:', e);
+    renderRelayList(RELAY_POINTS_DEMO);
+  }
+}
+
+// -------- GOOGLE SHEETS IMPORT --------
+async function importFromGoogleSheets() {
+  const rawUrl = document.getElementById('gsheetsUrl').value.trim();
+  if (!rawUrl) { showToast('⚠️ Entrez un lien Google Sheet'); return; }
+
+  showProgressBar();
+  setProgressBar(20);
+  try {
+    // La clé Google Sheets reste côté serveur via /api/import-sheets
+    const r = await fetch('/api/import-sheets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sheet_url: rawUrl })
+    });
+    setProgressBar(70);
+    if (!r.ok) {
+      const err = await r.json();
+      throw new Error(err.error || `HTTP ${r.status}`);
+    }
+    const data = await r.json();
+    if (!data.products?.length) throw new Error('Sheet vide ou aucun produit détecté');
+    setProgressBar(100);
+    showImportPreview(data.products);
+    showToast(`📊 ${data.products.length} produit(s) détecté(s) depuis Google Sheets`);
+  } catch(e) {
+    hideProgressBar();
+    showToast('✗ Erreur Google Sheets: ' + e.message);
+  }
+}
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) processImportFile(file);
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processImportFile(file);
+}
+
+function processImportFile(file) {
+  showProgressBar();
+  const ext = file.name.split('.').pop().toLowerCase();
+  setProgressBar(20);
+  if (ext === 'csv') {
+    if (typeof Papa === 'undefined') { showToast('⚠️ Bibliothèque CSV non chargée'); return; }
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true,
+      complete(results) {
+        setProgressBar(80);
+        const products = parseCSVRows(results.data);
+        setProgressBar(100);
+        showImportPreview(products);
+        showToast(`📊 ${products.length} produit(s) détecté(s) dans le CSV`);
+      },
+      error(e) { hideProgressBar(); showToast('✗ Erreur CSV: ' + e.message); }
+    });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    if (typeof XLSX === 'undefined') { showToast('⚠️ Bibliothèque XLSX non chargée'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setProgressBar(60);
+      const wb = XLSX.read(ev.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+      setProgressBar(80);
+      const products = parseCSVRows(rows);
+      setProgressBar(100);
+      showImportPreview(products);
+      showToast(`📊 ${products.length} produit(s) détecté(s) dans le XLSX`);
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    hideProgressBar();
+    showToast('✗ Format non supporté. Utilisez CSV ou XLSX.');
+  }
+}
+
+const COLUMN_MAP = {
+  nom: 'name', name: 'name',
+  description: 'description', desc: 'description',
+  prix_vente: 'price', prix: 'price', price: 'price', price_sell: 'price',
+  prix_achat: 'buyPrice', cout: 'buyPrice', cost: 'buyPrice', price_buy: 'buyPrice',
+  fournisseur: 'supplier', supplier: 'supplier',
+  couleurs: 'colors', colors: 'colors',
+  tailles: 'sizes', sizes: 'sizes',
+  stock: 'stock',
+  images: 'images', image: 'images',
+  categorie: 'cat', category: 'cat', cat: 'cat',
+  badge: 'badge',
+};
+
+function parseSheetRows(rows) {
+  const headers = rows[0].map(h => h.toLowerCase().trim().replace(/ /g,'_'));
+  return rows.slice(1).filter(r => r.some(c => c)).map((row, idx) => {
+    const obj = {};
+    headers.forEach((h, i) => { const key = COLUMN_MAP[h] || h; obj[key] = (row[i] || '').toString().trim(); });
+    return normalizeImportRow(obj, idx);
+  });
+}
+
+function parseCSVRows(rows) {
+  return rows.map((row, idx) => {
+    const obj = {};
+    Object.keys(row).forEach(k => { const key = COLUMN_MAP[k.toLowerCase().trim().replace(/ /g,'_')] || k; obj[key] = (row[k] || '').toString().trim(); });
+    return normalizeImportRow(obj, idx);
+  });
+}
+
+function normalizeImportRow(obj, idx) {
+  const stock = {};
+  const sizes = (obj.sizes || 'XS,S,M,L,XL').split(',').map(s => s.trim());
+  const stockRaw = (obj.stock || '10').split(',');
+  sizes.forEach((s, i) => { stock[s] = parseInt(stockRaw[i] || stockRaw[0] || '10'); });
+  return {
+    id: 1000 + idx,
+    name: obj.name || `Produit ${idx+1}`,
+    description: obj.description || '',
+    price: parseFloat(obj.price || 0),
+    buyPrice: parseFloat(obj.buyPrice || 0),
+    priceOld: null,
+    cat: obj.cat || 'T-shirts',
+    emoji: obj.emoji || '👕',
+    badge: obj.badge || null,
+    supplier: obj.supplier || '',
+    colors: (obj.colors || '#0a0a0a').split(',').map(c => c.trim()),
+    images: (obj.images || '').split(',').map(i => i.trim()).filter(Boolean),
+    stock,
+    _imported: true
+  };
+}
+
+let importedProducts = [];
+function showImportPreview(products) {
+  importedProducts = products;
+  hideProgressBar();
+  const prev = document.getElementById('importPreview');
+  prev.style.display = 'block';
+  document.querySelector('#importPreview .admin-table-wrap table tbody').innerHTML = products.map(p => {
+    const margin = p.buyPrice > 0 ? Math.round(((p.price - p.buyPrice) / p.price) * 100) : 0;
+    return `<tr>
+      <td>${p.name}</td>
+      <td>${p.price ? p.price.toFixed(2) + ' €' : '—'}</td>
+      <td>${p.buyPrice ? p.buyPrice.toFixed(2) + ' €' : '—'}</td>
+      <td>${p.colors.join(', ')}</td>
+      <td>${Object.values(p.stock).reduce((a,b)=>a+b,0)}</td>
+    </tr>`;
+  }).join('');
+  document.querySelector('#importPreview .admin-btn:last-child').onclick = publishImportedProducts;
+}
+
+async function publishImportedProducts() {
+  const adminKey = localStorage.getItem('fansfr_admin_key') || '';
+  let ok = 0;
+  for (const p of importedProducts) {
+    try {
+      const res = await fetch('/api/save-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({
+          name: p.name, description: p.description,
+          price_sell: p.price, price_buy: p.buyPrice,
+          category: p.cat, badge: p.badge, supplier: p.supplier,
+          colors: p.colors, stock: p.stock, images: p.images, emoji: p.emoji
+        })
+      });
+      if ((await res.json()).success) ok++;
+    } catch(e) { console.error('publish product error:', e); }
+  }
+  showToast(`✓ ${ok}/${importedProducts.length} produit(s) publiés`);
+  document.getElementById('importPreview').style.display = 'none';
+  importedProducts = [];
+}
+
+function showProgressBar() {
+  document.getElementById('importProgressWrap').style.display = 'block';
+  setProgressBar(0);
+}
+function hideProgressBar() {
+  setTimeout(() => { document.getElementById('importProgressWrap').style.display = 'none'; }, 800);
+}
+function setProgressBar(pct) {
+  document.getElementById('importBar').style.width = pct + '%';
+}
+
+// -------- DONNÉES LOCALES --------
+const PRODUCTS = [
+  { id:1, name:'Tee Essential Noir', price:59, priceOld:79, cat:'T-shirts', emoji:'👕', badge:'Nouveau', colors:['#0a0a0a','#fafaf8','#7a7a9d'], stock:{XS:5,S:3,M:8,L:2,XL:0} },
+  { id:2, name:'Sweat Premium Anthracite', price:89, cat:'Sweats', emoji:'👔', badge:null, colors:['#2a2a2a','#0a0a0a','#c9a84c'], stock:{XS:4,S:0,M:6,L:8,XL:3} },
+  { id:3, name:'Veste Coach Noir', price:139, cat:'Vestes', emoji:'🧥', badge:'Tendance', colors:['#0a0a0a','#2a2a2a'], stock:{XS:2,S:5,M:0,L:1,XL:0} },
+  { id:4, name:'Casquette Logo Or', price:39, cat:'Accessoires', emoji:'🧢', badge:null, colors:['#0a0a0a','#c9a84c'], stock:{XS:20,S:20,M:15,L:10,XL:5} },
+  { id:5, name:'Tee Premium Blanc', price:65, cat:'T-shirts', emoji:'👕', badge:'Rupture', colors:['#fafaf8','#0a0a0a'], stock:{XS:0,S:0,M:0,L:0,XL:0} },
+  { id:6, name:'Sweat Zip Anthracite', price:99, cat:'Sweats', emoji:'🧥', badge:null, colors:['#2a2a2a','#0a0a0a'], stock:{XS:3,S:0,M:2,L:4,XL:1} },
+  { id:7, name:'Short Cargo Kaki', price:79, cat:'Vestes', emoji:'👖', badge:'Nouveau', colors:['#6b7d4a','#0a0a0a'], stock:{XS:5,S:8,M:6,L:4,XL:2} },
+  { id:8, name:'Écharpe Cachemire', price:119, cat:'Accessoires', emoji:'🧣', badge:null, colors:['#8b4513','#fafaf8','#0a0a0a'], stock:{XS:10,S:10,M:10,L:10,XL:10} },
+];
+
+let cart = [
+  { name:'Tee Essential Noir', variant:'Noir / M', price:59, qty:1, emoji:'👕' },
+  { name:'Sweat Premium Anthracite', variant:'Anthracite / L', price:89, qty:1, emoji:'👔' },
+];
+
+let shippingCost = null;
+let promoApplied = false;
+let currentPage = 'home';
+let selectedProductColor = 0;
+let selectedProductSize = 'M';
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-'+name);
+  if (el) el.classList.add('active');
+  currentPage = name;
+  document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+  const navBtn = document.getElementById('nav-'+name);
+  if (navBtn) navBtn.classList.add('active');
+  window.scrollTo(0,0);
+  if (name === 'cart') renderCart();
+  if (name === 'catalogue') renderCatalogue();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function addToCart(name, price) {
+  const existing = cart.find(i => i.name === name);
+  if (existing) existing.qty++;
+  else cart.push({name, variant:'Noir / M', price, qty:1, emoji:'👕'});
+  updateCartBadge();
+  showToast('✓ Ajouté au panier');
+}
+
+function updateCartBadge() {
+  const total = cart.reduce((s,i) => s+i.qty, 0);
+  document.getElementById('cartBadge').textContent = total;
+}
+
+function renderCart() {
+  const el = document.getElementById('cartItems');
+  if (!cart.length) { el.innerHTML = '<div style="text-align:center; padding:3rem; color:var(--mid)">Votre panier est vide</div>'; return; }
+  el.innerHTML = cart.map((item, idx) => `
+    <div class="cart-item">
+      <div class="cart-item-img">${item.emoji}</div>
+      <div>
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-variant">${item.variant}</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(${idx},-1)">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${idx},1)">+</button>
+        </div>
+        <button class="remove-btn" onclick="removeItem(${idx})">Supprimer</button>
+      </div>
+      <div class="cart-item-price">${(item.price * item.qty).toFixed(2).replace('.',',')} €</div>
+    </div>
+  `).join('');
+  updateTotals();
+}
+
+function changeQty(idx, delta) {
+  cart[idx].qty = Math.max(1, cart[idx].qty + delta);
+  updateCartBadge();
+  renderCart();
+}
+
+function removeItem(idx) {
+  cart.splice(idx, 1);
+  updateCartBadge();
+  renderCart();
+}
+
+function updateTotals() {
+  const sub = cart.reduce((s,i) => s + i.price*i.qty, 0);
+  const disc = promoApplied ? sub * 0.1 : 0;
+  const ship = shippingCost !== null ? shippingCost : 0;
+  const total = sub - disc + ship;
+  document.getElementById('subtotal').textContent = sub.toFixed(2).replace('.',',')+' €';
+  document.getElementById('shippingCost').textContent = shippingCost !== null ? (shippingCost === 0 ? 'Gratuit' : shippingCost.toFixed(2).replace('.',',')+' €') : 'À calculer';
+  document.getElementById('cartTotal').textContent = total.toFixed(2).replace('.',',')+' €';
+  document.getElementById('checkoutTotal').textContent = total.toFixed(2).replace('.',',')+' €';
+}
+
+function updateShipping(cost) {
+  shippingCost = cost;
+  updateTotals();
+}
+
+function applyPromo() {
+  const code = document.getElementById('promoCode').value.trim().toUpperCase();
+  const msg = document.getElementById('promoMsg');
+  if (code === 'FANSFR10') {
+    promoApplied = true;
+    msg.textContent = '✓ Code appliqué — 10% de réduction';
+    msg.style.color = '#66bb6a';
+    updateTotals();
+  } else if (code) {
+    msg.textContent = '✗ Code invalide';
+    msg.style.color = '#e57373';
+  }
+}
+
+function openCheckout() {
+  openStripeCheckout();
+}
+
+async function simulatePayment() {
+  closeModal('checkoutModal');
+  const sub = cart.reduce((s,i) => s + i.price*i.qty, 0);
+  const disc = promoApplied ? sub * 0.1 : 0;
+  const total = sub - disc + shippingCost;
+  const orderRef = 'FAN-' + Date.now().toString().slice(-6);
+  const shippingMode = document.querySelector('input[name="shipping"]:checked')?.value || 'domicile';
+  const orderData = {
+    orderRef, email: currentUser?.email || 'client@fansfr.fr',
+    items: [...cart], totalCents: Math.round(total * 100),
+    deliveryMode: shippingMode,
+    relayPoint: selectedRelayPoint,
+    slot: selectedSlot,
+    total: total.toFixed(2).replace('.',',')
+  };
+  await saveOrder(orderData);
+  await sendOrderConfirmationEmail(orderData);
+  cart = []; updateCartBadge(); renderCart();
+  showPage('confirmation');
+  renderConfirmationPage(orderData);
+}
+
+function renderConfirmationPage(orderData) {
+  const el = document.getElementById('page-confirmation');
+  if (!el) return;
+  let deliveryBlock = '';
+  if (orderData.deliveryMode === 'main-propre') {
+    deliveryBlock = `<div class="delivery-info-box"><div class="delivery-info-title">Remise en main propre — Angers</div><div class="delivery-info-text">Créneau confirmé : <strong>${orderData.slot || 'À confirmer'}</strong><br>Vous recevrez un email de rappel 24h avant.</div></div>`;
+  } else if (orderData.deliveryMode === 'relais') {
+    deliveryBlock = `<div class="delivery-info-box"><div class="delivery-info-title">Livraison en point relais</div><div class="delivery-info-text"><strong>${orderData.relayPoint?.name || 'Point relais sélectionné'}</strong><br>${orderData.relayPoint?.address || ''}</div></div>`;
+  } else {
+    deliveryBlock = `<div class="delivery-info-box"><div class="delivery-info-title">Livraison à domicile Colissimo</div><div class="delivery-info-text">Délai estimé : <strong>2 à 4 jours ouvrés</strong><br>Un numéro de suivi vous sera envoyé par email.</div></div>`;
+  }
+  el.querySelector('.confirmation-sub').innerHTML = `Commande <strong>${orderData.orderRef}</strong> confirmée. Un email de confirmation a été envoyé à <strong>${orderData.email}</strong>.`;
+  el.querySelector('#conf-delivery').innerHTML = deliveryBlock;
+  el.querySelector('#conf-items').innerHTML = orderData.items.map(i => `<div class="confirmation-row"><span>${i.name} × ${i.qty}</span><span>${(i.price*i.qty).toFixed(2).replace('.',',')} €</span></div>`).join('') + `<div class="confirmation-row"><span>Total</span><span>${orderData.total} €</span></div>`;
+}
+
+function searchRelays() {
+  const val = document.getElementById('relaySearchInput').value.trim();
+  const postal = val.match(/\d{5}/)?.[0] || '49000';
+  searchRelaysAPI(postal);
+}
+
+function handleSearch(val) {
+  if (val.length > 1 && currentPage !== 'catalogue') {
+    showPage('catalogue');
+    setTimeout(() => filterProducts(), 100);
+  }
+}
+
+// Catalogue
+function renderProductCard(p, onclick) {
+  const isOos = Object.values(p.stock).every(v => v === 0);
+  const badgeHtml = p.badge ? `<div class="product-badge ${p.badge==='Rupture'?'oos':p.badge==='Nouveau'?'gold':''}">${p.badge}</div>` : '';
+  const colorDots = p.colors.map(c => `<div class="color-dot" style="background:${c}" onclick="event.stopPropagation()"></div>`).join('');
+  const quickAdd = isOos ? `<button class="quick-add" onclick="event.stopPropagation(); toggleNotifyModal()">🔔 M'avertir</button>` : `<button class="quick-add" onclick="event.stopPropagation(); addToCart('${p.name}', ${p.price})">Ajouter au panier</button>`;
+  return `
+    <div class="product-card" onclick="${onclick}">
+      <div class="product-img">
+        <div class="product-img-placeholder">${p.emoji}</div>
+        ${badgeHtml}
+        ${quickAdd}
+      </div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-price"><strong>${p.price},00 €</strong>${p.priceOld ? ` <del style="color:var(--mid)">${p.priceOld},00 €</del>` : ''}</div>
+      <div class="product-colors">${colorDots}</div>
+    </div>`;
+}
+
+function renderHome() {
+  document.getElementById('homeGrid').innerHTML = PRODUCTS.slice(0,4).map(p => renderProductCard(p, "showPage('product')")).join('');
+  document.getElementById('trendGrid').innerHTML = PRODUCTS.slice(4,8).map(p => renderProductCard(p, "showPage('product')")).join('');
+  const wl = document.getElementById('wishlistGrid');
+  if (wl) wl.innerHTML = PRODUCTS.slice(0,2).map(p => renderProductCard(p, "showPage('product')")).join('');
+}
+
+let filteredProducts = [...PRODUCTS];
+function filterProducts() {
+  const min = parseFloat(document.getElementById('priceMin')?.value || 0);
+  const max = parseFloat(document.getElementById('priceMax')?.value || 9999);
+  const cats = ['tshirt','sweats','vestes','accessoires'];
+  const catMap = {tshirt:'T-shirts', sweats:'Sweats', vestes:'Vestes', accessoires:'Accessoires'};
+  const activeCats = cats.filter(c => document.getElementById('f-'+c)?.checked).map(c => catMap[c]);
+  filteredProducts = PRODUCTS.filter(p => p.price >= min && p.price <= max && activeCats.includes(p.cat));
+  document.getElementById('catCount').textContent = filteredProducts.length + ' produit' + (filteredProducts.length > 1 ? 's' : '');
+  document.getElementById('catalogueGrid').innerHTML = filteredProducts.map(p => renderProductCard(p, "showPage('product')")).join('');
+}
+
+function sortProducts(val) {
+  if (val === 'price-asc') filteredProducts.sort((a,b) => a.price - b.price);
+  else if (val === 'price-desc') filteredProducts.sort((a,b) => b.price - a.price);
+  else if (val === 'name') filteredProducts.sort((a,b) => a.name.localeCompare(b.name));
+  document.getElementById('catalogueGrid').innerHTML = filteredProducts.map(p => renderProductCard(p, "showPage('product')")).join('');
+}
+
+function renderCatalogue() { filterProducts(); }
+
+function toggleColorFilter(el, color) {
+  el.classList.toggle('selected');
+  filterProducts();
+}
+
+// Product page
+const productColors = [
+  { color:'#0a0a0a', label:'Noir', emojis:['👕','👕','👔'] },
+  { color:'#fafaf8', label:'Blanc', emojis:['👘','👘','👗'] },
+  { color:'#7a7a9d', label:'Gris bleu', emojis:['🥻','🥻','👔'] },
+];
+const sizes = ['XS','S','M','L','XL'];
+const sizeStock = {XS:5,S:3,M:8,L:2,XL:0};
+
+function initProductPage() {
+  // Color options
+  const colorEl = document.getElementById('colorOptions');
+  colorEl.innerHTML = productColors.map((c,i) => `<div class="color-opt ${i===0?'active':''}" style="background:${c.color}" onclick="selectColor(${i})" title="${c.label}"></div>`).join('');
+  // Size options
+  const sizeEl = document.getElementById('sizeOptions');
+  sizeEl.innerHTML = sizes.map(s => `<button class="size-opt ${s==='M'?'active':''} ${sizeStock[s]===0?'oos':''}" onclick="selectSize('${s}',${sizeStock[s]})">${s}</button>`).join('');
+  // Thumbs
+  renderThumbs(0);
+}
+
+function selectColor(idx) {
+  selectedProductColor = idx;
+  document.querySelectorAll('.color-opt').forEach((c,i) => c.classList.toggle('active', i===idx));
+  document.getElementById('selectedColor').textContent = productColors[idx].label;
+  document.getElementById('mainImg').textContent = productColors[idx].emojis[0];
+  renderThumbs(idx);
+}
+
+function renderThumbs(colorIdx) {
+  document.getElementById('thumbs').innerHTML = productColors[colorIdx].emojis.map((e,i) => `<div class="thumb ${i===0?'active':''}" onclick="selectThumb(this,'${e}')">${e}</div>`).join('');
+}
+
+function selectThumb(el, emoji) {
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('mainImg').textContent = emoji;
+}
+
+function selectSize(size, stock) {
+  if (stock === 0) return;
+  selectedProductSize = size;
+  document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('selectedSize').textContent = size;
+  const stockEl = document.getElementById('stockStatus');
+  stockEl.textContent = '✓ En stock (' + stock + ' disponibles)';
+  stockEl.style.color = stock < 3 ? '#c9a84c' : 'var(--success)';
+}
+
+function toggleNotifyForm() {
+  document.getElementById('notifyForm').classList.toggle('show');
+}
+
+function submitNotify() {
+  const email = document.getElementById('notifyEmail').value;
+  if (!email) return;
+  document.getElementById('notifyForm').classList.remove('show');
+  showToast('🔔 Vous serez alerté à ' + email);
+}
+
+function toggleNotifyModal() {
+  openModal('checkoutModal');
+  document.querySelector('#checkoutModal .modal-title').textContent = 'Alerte retour en stock';
+  document.querySelector('#checkoutModal .modal-body').innerHTML = '<p>Laissez votre email pour être notifié dès que ce produit est de nouveau disponible.</p><input type="email" class="modal-input" placeholder="votre@email.fr">';
+  document.querySelector('#checkoutModal .btn-primary').textContent = "M'alerter →";
+  document.querySelector('#checkoutModal .btn-primary').onclick = () => { closeModal('checkoutModal'); showToast('🔔 Alerte activée ! Vous serez notifié.'); };
+}
+
+// Admin
+function switchAdminTab(btn, tabId) {
+  document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['admin-dashboard','admin-products','admin-import','admin-orders','admin-suppliers'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === tabId ? 'block' : 'none';
+  });
+  if (tabId === 'admin-products') renderAdminProducts();
+}
+
+function renderAdminProducts() {
+  const tbody = document.getElementById('adminProductTable');
+  tbody.innerHTML = PRODUCTS.map(p => {
+    const buyPrice = Math.round(p.price * 0.55);
+    const margin = p.price - buyPrice;
+    const marginPct = Math.round((margin / p.price) * 100);
+    const marginClass = marginPct < 30 ? 'low' : marginPct < 45 ? 'ok' : 'good';
+    const totalStock = Object.values(p.stock).reduce((a,b)=>a+b,0);
+    return `<tr>
+      <td>${p.emoji} ${p.name}</td>
+      <td>${p.price},00 €</td>
+      <td>${buyPrice},00 €</td>
+      <td>
+        <div style="font-size:.82rem; font-weight:500">${margin},00 € <span style="color:#777">(${marginPct}%)</span></div>
+        <div class="margin-bar ${marginClass}" style="width:${marginPct}%"></div>
+      </td>
+      <td style="color:${totalStock===0?'#a32d2d':totalStock<10?'#ba7517':'#2d7a4f'}">${totalStock}</td>
+      <td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('✏️ Édition de ${p.name}')">Modifier</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function simulateImport() {
+  document.getElementById('importPreview').style.display = 'block';
+  showToast('📊 Fichier lu — 3 produits détectés');
+}
+
+function switchTab(btn, tabId) {
+  document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['tab-orders','tab-infos','tab-wishlist','tab-notifs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === tabId ? 'block' : 'none';
+  });
+  if (tabId === 'tab-wishlist') {
+    const wl = document.getElementById('wishlistGrid');
+    wl.innerHTML = PRODUCTS.slice(0,2).map(p => renderProductCard(p, "showPage('product')")).join('');
+  }
+}
+
+// -------- RELAY / SLOT --------
+let selectedRelayPoint = null;
+let selectedSlot = null;
+
+function renderRelayList(points) {
+  document.getElementById('relayList').innerHTML = points.map((p, i) => `
+    <div class="relay-item ${selectedRelayPoint?.id===p.id?'selected':''}" onclick="selectRelayOnMap(${i})" id="relay-item-${i}">
+      <div>
+        <div class="relay-name">${p.name}</div>
+        <div class="relay-address">${p.address}</div>
+        <div class="relay-network">${p.network}</div>
+        <div class="relay-hours" style="color:var(--success)">${p.hours}</div>
+      </div>
+      <div class="relay-distance">${p.distance}</div>
+    </div>`).join('');
+}
+
+function selectRelayOnMap(idx) {
+  const points = RELAY_POINTS_DEMO;
+  selectedRelayPoint = points[idx];
+  document.querySelectorAll('.relay-item').forEach((el, i) => el.classList.toggle('selected', i===idx));
+  document.querySelectorAll('.relay-map-pin').forEach((p, i) => p.classList.toggle('selected', i===idx));
+  document.getElementById('relayConfirmBtn').disabled = false;
+  document.getElementById('relayConfirmBtn').style.opacity = '1';
+}
+
+function confirmRelay() {
+  if (!selectedRelayPoint) return;
+  closeModal('relayModal');
+  showToast(`📍 Point relais sélectionné: ${selectedRelayPoint.name}`);
+  document.querySelector('.shipping-opt input[value="relais"]').parentElement.querySelector('label span').textContent = selectedRelayPoint.name;
+}
+
+function openSlotModal() { initSlotPicker(); openModal('slotModal'); }
+
+function initSlotPicker() {
+  const dates = [];
+  for (let i=1; i<=5; i++) {
+    const d = new Date(); d.setDate(d.getDate()+i);
+    if (d.getDay()===0) continue;
+    dates.push(d);
+  }
+  document.getElementById('slotDateTabs').innerHTML = dates.map((d,i) => {
+    const label = d.toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
+    return `<button class="slot-date-tab ${i===0?'active':''}" onclick="selectSlotDate(this,'${label}')">${label}</button>`;
+  }).join('');
+  renderSlots();
+}
+
+function selectSlotDate(btn, date) {
+  document.querySelectorAll('.slot-date-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSlots();
+}
+
+function renderSlots() {
+  const slots = ['10h00–11h00','11h00–12h00','14h00–15h00','15h00–16h00','16h00–17h00','17h00–18h00'];
+  document.getElementById('slotGrid').innerHTML = slots.map(s => `<button class="slot-btn" onclick="pickSlot(this,'${s}')">${s}</button>`).join('');
+}
+
+function pickSlot(btn, slot) {
+  document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedSlot = slot;
+}
+
+function confirmSlot() {
+  if (!selectedSlot) { showToast('⚠️ Sélectionnez un créneau'); return; }
+  const activeDateTab = document.querySelector('.slot-date-tab.active');
+  const dateLabel = activeDateTab ? activeDateTab.textContent : '';
+  const fullSlot = `${dateLabel} ${selectedSlot}`;
+  closeModal('slotModal');
+  showToast(`✓ Créneau confirmé : ${fullSlot}`);
+}
+
+// -------- ADMIN: save product --------
+async function saveProduct() {
+  const name = document.getElementById('edit-name').value;
+  const price = parseFloat(document.getElementById('edit-price').value);
+  const buyPrice = parseFloat(document.getElementById('edit-buy-price').value);
+  const adminKey = localStorage.getItem('fansfr_admin_key') || '';
+  try {
+    const res = await fetch('/api/save-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      body: JSON.stringify({ name, price_sell: price, price_buy: buyPrice })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✓ Produit sauvegardé — marge ' + (data.margin?.percent || '?') + '%');
+    } else {
+      showToast('✗ Erreur: ' + (data.error || 'inconnue'));
+    }
+  } catch(e) {
+    showToast('✗ Erreur réseau: ' + e.message);
+  }
+  closeModal('productEditorModal');
+}
+
+function updateMarginCalc() {
+  const sell = parseFloat(document.getElementById('edit-price').value) || 0;
+  const buy = parseFloat(document.getElementById('edit-buy-price').value) || 0;
+  const margin = sell - buy;
+  const pct = sell > 0 ? Math.round((margin / sell) * 100) : 0;
+  const marginClass = pct < 30 ? 'low' : pct < 45 ? 'ok' : 'good';
+  document.getElementById('marginVal').textContent = margin.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('marginPct').textContent = '(' + pct + '%)';
+  document.getElementById('marginVal').style.color = pct < 30 ? '#ef9a9a' : pct < 45 ? '#ffa726' : '#66bb6a';
+  const bar = document.getElementById('marginBar');
+  bar.style.width = Math.min(pct, 100) + '%';
+  bar.className = 'margin-bar ' + marginClass;
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('auth-login-form').style.display   = tab === 'login'  ? 'block' : 'none';
+  document.getElementById('auth-signup-form').style.display  = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('auth-tab-login').classList.toggle('active',  tab === 'login');
+  document.getElementById('auth-tab-signup').classList.toggle('active', tab === 'signup');
+}
+
+function acceptCookies() {
+  localStorage.setItem('fansfr_cookies', 'accepted');
+  document.getElementById('cookieBanner').classList.remove('show');
+}
+
+function declineCookies() {
+  localStorage.setItem('fansfr_cookies', 'declined');
+  document.getElementById('cookieBanner').classList.remove('show');
+}
+
+// -------- INIT --------
+function init() {
+  restoreSession();
+  loadApiConfigInputs();
+  loadStripeIfConfigured();
+  renderHome();
+  initProductPage();
+  renderRelayList(RELAY_POINTS_DEMO);
+  // URL param order=success (retour depuis Stripe)
+  if (new URLSearchParams(window.location.search).get('order') === 'success') {
+    showPage('confirmation');
+    showToast('🎉 Paiement Stripe confirmé !');
+  }
+  // Cookie banner
+  if (!localStorage.getItem('fansfr_cookies')) {
+    setTimeout(() => document.getElementById('cookieBanner').classList.add('show'), 1200);
+  }
+  // Charger le catalogue Supabase si configuré
+  // Charger le catalogue depuis /api/products (toujours actif si déployé sur Vercel)
+  setTimeout(() => loadProducts(), 500);
+}
+
+init();
+</script>
+</body>
+</html>
