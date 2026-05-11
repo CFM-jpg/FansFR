@@ -716,7 +716,7 @@
           <span id="stripe-status" class="api-status"></span>
         </div>
         <div><label class="auth-label">Publishable Key</label><input class="auth-input" id="cfg-stripe-key" placeholder="pk_live_... ou pk_test_..." style="font-size:.78rem;font-family:monospace"></div>
-        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">⚠️ Ne jamais saisir votre clé secrète ici. La clé secrète doit rester côté serveur (Supabase Edge Functions).</p>
+        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">⚠️ Clé publique uniquement (pk_live_ ou pk_test_). La clé secrète vit dans les variables d'environnement Vercel, jamais ici.</p>
       </div>
 
       <!-- Resend -->
@@ -730,7 +730,7 @@
           <div><label class="auth-label">Clé API</label><input class="auth-input" id="cfg-resend-key" placeholder="re_..." style="font-size:.78rem;font-family:monospace"></div>
           <div><label class="auth-label">Expéditeur</label><input class="auth-input" id="cfg-resend-from" placeholder="FansFR &lt;commandes@fansfr.fr&gt;" style="font-size:.78rem"></div>
         </div>
-        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">La clé Resend est utilisée via Supabase Edge Functions pour les emails (confirmation, retour en stock).</p>
+        <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">Configurez RESEND_API_KEY dans les variables d'environnement Vercel. Ce champ est désactivé côté client.</p>
       </div>
 
       <!-- Sendcloud / Boxtal -->
@@ -756,6 +756,16 @@
         </div>
         <div><label class="auth-label">Clé API Google</label><input class="auth-input" id="cfg-gsheets-key" placeholder="AIza..." style="font-size:.78rem;font-family:monospace"></div>
         <p style="font-size:.72rem;color:var(--mid);margin-top:.5rem">Activez l'API Google Sheets dans Google Cloud Console. Autorise la lecture des Sheets publics et partagés.</p>
+      </div>
+
+      <!-- Clé Admin -->
+      <div style="border:1px solid #c9a84c33;border-radius:6px;padding:1rem;background:#1a1500">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+          <span style="font-size:1.1rem">🔑</span>
+          <strong style="font-size:.9rem;color:#c9a84c">Clé Admin (routes protégées)</strong>
+        </div>
+        <div><label class="auth-label">ADMIN_SECRET_KEY</label><input class="auth-input" id="cfg-admin-key" placeholder="Identique à la variable Vercel ADMIN_SECRET_KEY" type="password" style="font-size:.78rem;font-family:monospace"></div>
+        <p style="font-size:.72rem;color:#888;margin-top:.5rem">Requise pour accéder aux routes <code>/api/admin-stats</code>, <code>/api/save-product</code>. Ne jamais partager.</p>
       </div>
     </div>
 
@@ -1257,27 +1267,30 @@
 
       <!-- DASHBOARD -->
       <div id="admin-dashboard">
-        <div class="admin-page-title">Tableau de bord</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <div class="admin-page-title" style="margin-bottom:0">Tableau de bord</div>
+          <button class="admin-btn outline" onclick="loadAdminStats()" style="font-size:.72rem">↺ Actualiser</button>
+        </div>
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-label">Chiffre d'affaires</div>
-            <div class="stat-value">12 480 €</div>
-            <div class="stat-sub up">↑ +18% ce mois</div>
+            <div class="stat-label">Chiffre d'affaires (30j)</div>
+            <div class="stat-value" id="dash-revenue">—</div>
+            <div class="stat-sub" id="dash-revenue-sub">Chargement…</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Marge globale</div>
-            <div class="stat-value">4 920 €</div>
-            <div class="stat-sub up">39,4% de marge</div>
+            <div class="stat-label">Marge catalogue</div>
+            <div class="stat-value" id="dash-margin">—</div>
+            <div class="stat-sub" id="dash-margin-sub">Chargement…</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Commandes</div>
-            <div class="stat-value">147</div>
-            <div class="stat-sub up">↑ +24 cette semaine</div>
+            <div class="stat-label">Commandes (30j)</div>
+            <div class="stat-value" id="dash-orders">—</div>
+            <div class="stat-sub" id="dash-orders-sub">Chargement…</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Ruptures de stock</div>
-            <div class="stat-value">3</div>
-            <div class="stat-sub down">12 clients en attente</div>
+            <div class="stat-value" id="dash-oos">—</div>
+            <div class="stat-sub down" id="dash-oos-sub">Chargement…</div>
           </div>
         </div>
         <div class="admin-table-wrap">
@@ -1287,26 +1300,26 @@
           </div>
           <table class="admin-table">
             <thead><tr><th>Commande</th><th>Client</th><th>Montant</th><th>Livraison</th><th>Statut</th></tr></thead>
-            <tbody>
-              <tr><td>#FAN-2025-0152</td><td>Thomas D.</td><td>89,00 €</td><td>Colissimo</td><td><span class="status-badge pending">En attente</span></td></tr>
-              <tr><td>#FAN-2025-0151</td><td>Sophie M.</td><td>118,00 €</td><td>Point relais</td><td><span class="status-badge shipped">Expédiée</span></td></tr>
-              <tr><td>#FAN-2025-0150</td><td>Lucas R.</td><td>59,00 €</td><td>Main propre</td><td><span class="status-badge handover">Remis</span></td></tr>
-              <tr><td>#FAN-2025-0149</td><td>Emma K.</td><td>178,00 €</td><td>Colissimo</td><td><span class="status-badge delivered">Livrée</span></td></tr>
-            </tbody>
+            <tbody id="dash-recent-orders"><tr><td colspan="5" style="color:#555;text-align:center;padding:1.5rem">Chargement…</td></tr></tbody>
           </table>
         </div>
         <div class="admin-table-wrap">
           <div class="admin-table-head">
-            <div class="admin-table-head-title">Alertes retour en stock (12 clients)</div>
-            <button class="admin-btn" onclick="showToast('📧 Emails envoyés à 12 clients !')">Envoyer les notifications</button>
+            <div class="admin-table-head-title" id="dash-alerts-title">Alertes retour en stock</div>
+            <button class="admin-btn" id="dash-notif-btn" onclick="triggerAllStockNotifications()" style="display:none">Envoyer les notifications</button>
           </div>
           <table class="admin-table">
-            <thead><tr><th>Produit</th><th>Variante</th><th>Clients en attente</th><th>Stock actuel</th></tr></thead>
-            <tbody>
-              <tr><td>Tee Premium Blanc</td><td>S</td><td>5</td><td><span style="color:#a32d2d">0</span></td></tr>
-              <tr><td>Veste Coach Noir</td><td>XL</td><td>4</td><td><span style="color:#a32d2d">0</span></td></tr>
-              <tr><td>Sweat Zip Anthracite</td><td>M</td><td>3</td><td><span style="color:#a32d2d">0</span></td></tr>
-            </tbody>
+            <thead><tr><th>Produit</th><th>Clients en attente</th><th>Action</th></tr></thead>
+            <tbody id="dash-alerts-tbody"><tr><td colspan="3" style="color:#555;text-align:center;padding:1.5rem">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-head">
+            <div class="admin-table-head-title">Produits stock faible (&#60;5 unités)</div>
+          </div>
+          <table class="admin-table">
+            <thead><tr><th>Produit</th><th>Catégorie</th><th>Stock total</th></tr></thead>
+            <tbody id="dash-lowstock-tbody"><tr><td colspan="3" style="color:#555;text-align:center;padding:1.5rem">Chargement…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1317,7 +1330,7 @@
         <div class="admin-table-wrap" style="margin-bottom:1.5rem">
           <div class="admin-table-head">
             <div class="admin-table-head-title">Catalogue (8 produits)</div>
-            <button class="admin-btn" onclick="showToast('✓ Nouveau produit créé')">+ Nouveau produit</button>
+            <button class="admin-btn" onclick="openProductEditor(null)">+ Nouveau produit</button>
           </div>
           <table class="admin-table">
             <thead><tr><th>Produit</th><th>Prix vente</th><th>Prix achat</th><th>Marge</th><th>Stock</th><th>Actions</th></tr></thead>
@@ -1349,20 +1362,16 @@
         </div>
         <div id="importPreview" style="display:none">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem">
-            <div style="font-size:.85rem; color:#aaa">Prévisualisation — 3 produits détectés</div>
+            <div style="font-size:.85rem; color:#aaa" id="importPreviewCount">Prévisualisation</div>
             <div style="display:flex; gap:.5rem">
-              <button class="admin-btn outline" onclick="document.getElementById('importPreview').style.display='none'">Annuler</button>
-              <button class="admin-btn" onclick="showToast('✓ 3 produits importés et publiés !')">Valider et publier</button>
+              <button class="admin-btn outline" onclick="document.getElementById('importPreview').style.display='none'; importedProducts=[];">Annuler</button>
+              <button class="admin-btn" id="publishBtn" onclick="publishImportedProducts()">Valider et publier</button>
             </div>
           </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
-              <thead><tr><th>Nom</th><th>Prix vente</th><th>Prix achat</th><th>Couleurs</th><th>Stock</th></tr></thead>
-              <tbody>
-                <tr><td>Tee Linen Ecru</td><td>65,00 €</td><td>22,00 €</td><td>Ecru, Beige</td><td>30</td></tr>
-                <tr><td>Short Cargo Kaki</td><td>79,00 €</td><td>28,00 €</td><td>Kaki, Noir</td><td>20</td></tr>
-                <tr><td>Casquette Logo Or</td><td>39,00 €</td><td>11,00 €</td><td>Noir/Or</td><td>50</td></tr>
-              </tbody>
+              <thead><tr><th>Nom</th><th>Prix vente</th><th>Prix achat</th><th>Marge</th><th>Couleurs</th><th>Stock total</th></tr></thead>
+              <tbody id="importPreviewBody"></tbody>
             </table>
           </div>
         </div>
@@ -1370,20 +1379,23 @@
 
       <!-- ORDERS ADMIN -->
       <div id="admin-orders" style="display:none">
-        <div class="admin-page-title">Gestion des commandes</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <div class="admin-page-title" style="margin-bottom:0">Gestion des commandes</div>
+          <button class="admin-btn" onclick="exportOrdersCSV()" style="font-size:.72rem">📥 Exporter CSV</button>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button class="admin-btn outline" id="filter-all" onclick="filterAdminOrders('all')" style="font-size:.72rem">Toutes</button>
+          <button class="admin-btn outline" id="filter-paid" onclick="filterAdminOrders('paid')" style="font-size:.72rem">En attente exp.</button>
+          <button class="admin-btn outline" id="filter-shipped" onclick="filterAdminOrders('shipped')" style="font-size:.72rem">Expédiées</button>
+          <button class="admin-btn outline" id="filter-delivered" onclick="filterAdminOrders('delivered')" style="font-size:.72rem">Livrées</button>
+        </div>
         <div class="admin-table-wrap">
           <div class="admin-table-head">
-            <div class="admin-table-head-title">Toutes les commandes</div>
-            <button class="admin-btn" onclick="showToast('📥 Export CSV en cours...')">Exporter CSV</button>
+            <div class="admin-table-head-title" id="orders-count-label">Chargement…</div>
           </div>
           <table class="admin-table">
             <thead><tr><th>N°</th><th>Client</th><th>Total</th><th>Livraison</th><th>Statut</th><th>Actions</th></tr></thead>
-            <tbody>
-              <tr><td>#FAN-0152</td><td>Thomas D.</td><td>89,00 €</td><td>Colissimo</td><td><span class="status-badge pending">En attente</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('🚚 Expédition marquée + étiquette générée')">Expédier</button></td></tr>
-              <tr><td>#FAN-0151</td><td>Sophie M.</td><td>118,00 €</td><td>Point relais</td><td><span class="status-badge shipped">Expédiée</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('🏷️ Étiquette Boxtal téléchargée')">Étiquette</button></td></tr>
-              <tr><td>#FAN-0150</td><td>Lucas R.</td><td>59,00 €</td><td>Main propre</td><td><span class="status-badge handover">Remis</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('✓ Commande clôturée')">Clôturer</button></td></tr>
-              <tr><td>#FAN-0149</td><td>Emma K.</td><td>178,00 €</td><td>Colissimo</td><td><span class="status-badge delivered">Livrée</span></td><td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('📄 Facture téléchargée')">Facture</button></td></tr>
-            </tbody>
+            <tbody id="admin-orders-tbody"><tr><td colspan="6" style="color:#555;text-align:center;padding:2rem">Chargement des commandes…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -2155,6 +2167,26 @@ function normalizeImportRow(obj, idx) {
 let importedProducts = [];
 function showImportPreview(products) {
   importedProducts = products;
+  // Remplir le tableau de prévisualisation
+  const tbody = document.getElementById('importPreviewBody');
+  if (tbody) {
+    tbody.innerHTML = products.map(p => {
+      const sell = parseFloat(p.price || 0);
+      const buy = parseFloat(p.buyPrice || 0);
+      const margin = sell > 0 ? Math.round(((sell - buy) / sell) * 100) : 0;
+      const totalStock = Object.values(p.stock || {}).reduce((a,b) => a + parseInt(b||0), 0);
+      return `<tr>
+        <td>${p.emoji||'👕'} ${p.name}</td>
+        <td>${sell.toFixed(2).replace('.',',')} €</td>
+        <td>${buy > 0 ? buy.toFixed(2).replace('.',',') + ' €' : '—'}</td>
+        <td><span style="color:${margin>=40?'#2d7a4f':margin>=25?'#ba7517':'#a32d2d'}">${margin}%</span></td>
+        <td>${(p.colors||[]).join(', ') || '—'}</td>
+        <td>${totalStock}</td>
+      </tr>`;
+    }).join('');
+  }
+  const countEl = document.getElementById('importPreviewCount');
+  if (countEl) countEl.textContent = `Prévisualisation — ${products.length} produit${products.length>1?'s':''} détecté${products.length>1?'s':''}`;
   hideProgressBar();
   const prev = document.getElementById('importPreview');
   prev.style.display = 'block';
@@ -2239,6 +2271,7 @@ function showPage(name) {
   window.scrollTo(0,0);
   if (name === 'cart') renderCart();
   if (name === 'catalogue') renderCatalogue();
+  if (name === 'admin') { if (document.getElementById('admin-dashboard').style.display !== 'none') loadAdminStats(); }
 }
 
 function showToast(msg) {
@@ -2385,28 +2418,33 @@ function handleSearch(val) {
 
 // Catalogue
 function renderProductCard(p, onclick) {
-  const isOos = Object.values(p.stock).every(v => v === 0);
+  const isOos = Object.values(p.stock || {}).every(v => v === 0);
   const badgeHtml = p.badge ? `<div class="product-badge ${p.badge==='Rupture'?'oos':p.badge==='Nouveau'?'gold':''}">${p.badge}</div>` : '';
-  const colorDots = p.colors.map(c => `<div class="color-dot" style="background:${c}" onclick="event.stopPropagation()"></div>`).join('');
-  const quickAdd = isOos ? `<button class="quick-add" onclick="event.stopPropagation(); toggleNotifyModal()">🔔 M'avertir</button>` : `<button class="quick-add" onclick="event.stopPropagation(); addToCart('${p.name}', ${p.price})">Ajouter au panier</button>`;
+  const colorDots = (p.colors||[]).map(c => `<div class="color-dot" style="background:${c}" onclick="event.stopPropagation()"></div>`).join('');
+  const quickAdd = isOos
+    ? `<button class="quick-add" onclick="event.stopPropagation(); openProductDetail(${JSON.stringify(p).replace(/"/g,'&quot;')}); toggleNotifyModal()">🔔 M'avertir</button>`
+    : `<button class="quick-add" onclick="event.stopPropagation(); addToCart('${p.name.replace(/'/g,"\'")}', ${p.price})">Ajouter au panier</button>`;
+  const clickFn = onclick || `openProductDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})`;
+  const priceDisplay = typeof p.price === 'number' ? p.price.toFixed(2).replace('.',',') : p.price;
+  const oldPrice = p.priceOld ? `<del style="color:var(--mid)">${typeof p.priceOld==='number'?p.priceOld.toFixed(2).replace('.',','):p.priceOld} €</del>` : '';
   return `
-    <div class="product-card" onclick="${onclick}">
+    <div class="product-card" onclick="${clickFn}">
       <div class="product-img">
-        <div class="product-img-placeholder">${p.emoji}</div>
+        <div class="product-img-placeholder">${p.emoji||'👕'}</div>
         ${badgeHtml}
         ${quickAdd}
       </div>
       <div class="product-name">${p.name}</div>
-      <div class="product-price"><strong>${p.price},00 €</strong>${p.priceOld ? ` <del style="color:var(--mid)">${p.priceOld},00 €</del>` : ''}</div>
+      <div class="product-price"><strong>${priceDisplay} €</strong> ${oldPrice}</div>
       <div class="product-colors">${colorDots}</div>
     </div>`;
 }
 
 function renderHome() {
-  document.getElementById('homeGrid').innerHTML = PRODUCTS.slice(0,4).map(p => renderProductCard(p, "showPage('product')")).join('');
-  document.getElementById('trendGrid').innerHTML = PRODUCTS.slice(4,8).map(p => renderProductCard(p, "showPage('product')")).join('');
+  document.getElementById('homeGrid').innerHTML = PRODUCTS.slice(0,4).map(p => renderProductCard(p)).join('');
+  document.getElementById('trendGrid').innerHTML = PRODUCTS.slice(4,8).map(p => renderProductCard(p)).join('');
   const wl = document.getElementById('wishlistGrid');
-  if (wl) wl.innerHTML = PRODUCTS.slice(0,2).map(p => renderProductCard(p, "showPage('product')")).join('');
+  if (wl) wl.innerHTML = PRODUCTS.slice(0,2).map(p => renderProductCard(p)).join('');
 }
 
 let filteredProducts = [...PRODUCTS];
@@ -2418,14 +2456,14 @@ function filterProducts() {
   const activeCats = cats.filter(c => document.getElementById('f-'+c)?.checked).map(c => catMap[c]);
   filteredProducts = PRODUCTS.filter(p => p.price >= min && p.price <= max && activeCats.includes(p.cat));
   document.getElementById('catCount').textContent = filteredProducts.length + ' produit' + (filteredProducts.length > 1 ? 's' : '');
-  document.getElementById('catalogueGrid').innerHTML = filteredProducts.map(p => renderProductCard(p, "showPage('product')")).join('');
+  document.getElementById('catalogueGrid').innerHTML = filteredProducts.map(p => renderProductCard(p)).join('');
 }
 
 function sortProducts(val) {
   if (val === 'price-asc') filteredProducts.sort((a,b) => a.price - b.price);
   else if (val === 'price-desc') filteredProducts.sort((a,b) => b.price - a.price);
   else if (val === 'name') filteredProducts.sort((a,b) => a.name.localeCompare(b.name));
-  document.getElementById('catalogueGrid').innerHTML = filteredProducts.map(p => renderProductCard(p, "showPage('product')")).join('');
+  document.getElementById('catalogueGrid').innerHTML = filteredProducts.map(p => renderProductCard(p)).join('');
 }
 
 function renderCatalogue() { filterProducts(); }
@@ -2514,26 +2552,51 @@ function switchAdminTab(btn, tabId) {
   if (tabId === 'admin-products') renderAdminProducts();
 }
 
-function renderAdminProducts() {
+async function renderAdminProducts() {
   const tbody = document.getElementById('adminProductTable');
-  tbody.innerHTML = PRODUCTS.map(p => {
-    const buyPrice = Math.round(p.price * 0.55);
-    const margin = p.price - buyPrice;
-    const marginPct = Math.round((margin / p.price) * 100);
-    const marginClass = marginPct < 30 ? 'low' : marginPct < 45 ? 'ok' : 'good';
-    const totalStock = Object.values(p.stock).reduce((a,b)=>a+b,0);
+  tbody.innerHTML = '<tr><td colspan="6" style="color:#555;text-align:center;padding:2rem">Chargement…</td></tr>';
+  const adminKey = API_CONFIG.adminKey;
+
+  let products = [];
+  if (adminKey) {
+    try {
+      const res = await fetch('/api/save-product', { headers: { 'x-admin-key': adminKey } });
+      const data = await res.json();
+      if (data.products) products = data.products;
+    } catch(e) { console.error('renderAdminProducts error:', e); }
+  }
+  // Fallback sur PRODUCTS locaux si pas de clé ou pas de réponse
+  if (!products.length) products = PRODUCTS.map(p => ({
+    ...p, price_sell: p.price, price_buy: p.buyPrice || Math.round(p.price * 0.55),
+    margin_amount: (p.price - (p.buyPrice || Math.round(p.price * 0.55))).toFixed(2),
+    margin_percent: Math.round(((p.price - (p.buyPrice || Math.round(p.price * 0.55))) / p.price) * 100),
+    margin_class: 'ok', total_stock: Object.values(p.stock||{}).reduce((a,b)=>a+b,0)
+  }));
+
+  document.querySelector('#admin-products .admin-table-head-title').textContent =
+    `Catalogue (${products.length} produit${products.length > 1 ? 's' : ''})`;
+
+  tbody.innerHTML = products.map(p => {
+    const sell = parseFloat(p.price_sell || p.price || 0);
+    const buy = parseFloat(p.price_buy || 0);
+    const margin = parseFloat(p.margin_amount || (sell - buy).toFixed(2));
+    const marginPct = parseInt(p.margin_percent || 0);
+    const marginClass = p.margin_class || (marginPct < 30 ? 'low' : marginPct < 45 ? 'ok' : 'good');
+    const totalStock = p.total_stock ?? Object.values(p.stock||{}).reduce((a,b)=>a+b,0);
+    const stockColor = totalStock === 0 ? '#a32d2d' : totalStock < 5 ? '#ba7517' : '#2d7a4f';
+    const safeId = JSON.stringify(p.id || '').replace(/"/g,'&quot;');
     return `<tr>
-      <td>${p.emoji} ${p.name}</td>
-      <td>${p.price},00 €</td>
-      <td>${buyPrice},00 €</td>
+      <td>${p.emoji||'👕'} ${p.name}</td>
+      <td>${sell.toFixed(2).replace('.',',')} €</td>
+      <td>${buy > 0 ? buy.toFixed(2).replace('.',',') + ' €' : '<span style="color:#555">—</span>'}</td>
       <td>
-        <div style="font-size:.82rem; font-weight:500">${margin},00 € <span style="color:#777">(${marginPct}%)</span></div>
-        <div class="margin-bar ${marginClass}" style="width:${marginPct}%"></div>
+        <div style="font-size:.82rem;font-weight:500">${margin.toFixed(2).replace('.',',')} € <span style="color:#777">(${marginPct}%)</span></div>
+        <div class="margin-bar ${marginClass}" style="width:${Math.min(marginPct,100)}%"></div>
       </td>
-      <td style="color:${totalStock===0?'#a32d2d':totalStock<10?'#ba7517':'#2d7a4f'}">${totalStock}</td>
-      <td><button class="admin-btn outline" style="font-size:.7rem; padding:3px 8px" onclick="showToast('✏️ Édition de ${p.name}')">Modifier</button></td>
+      <td style="color:${stockColor}">${totalStock}</td>
+      <td><button class="admin-btn outline" style="font-size:.7rem;padding:3px 8px" onclick="openProductEditor(${safeId})">Modifier</button></td>
     </tr>`;
-  }).join('');
+  }).join('') || '<tr><td colspan="6" style="color:#555;text-align:center;padding:2rem">Aucun produit</td></tr>';
 }
 
 function simulateImport() {
@@ -2550,7 +2613,7 @@ function switchTab(btn, tabId) {
   });
   if (tabId === 'tab-wishlist') {
     const wl = document.getElementById('wishlistGrid');
-    wl.innerHTML = PRODUCTS.slice(0,2).map(p => renderProductCard(p, "showPage('product')")).join('');
+    wl.innerHTML = PRODUCTS.slice(0,2).map(p => renderProductCard(p)).join('');
   }
 }
 
@@ -2685,6 +2748,235 @@ function declineCookies() {
 }
 
 // -------- INIT --------
+
+// ═══════════════════════════════════════════════════════════════
+// NOUVELLES FONCTIONS — FansFR v5
+// ═══════════════════════════════════════════════════════════════
+
+// ── Ouvrir la fiche produit depuis n'importe quelle carte ──────
+let currentProductId = null;
+function openProductDetail(p) {
+  if (!p || typeof p !== 'object') return showPage('product');
+  currentProductId = p.id || null;
+  // Nom + prix
+  const nameEl = document.querySelector('.product-detail-name');
+  const priceEl = document.querySelector('.product-detail-price');
+  if (nameEl) nameEl.textContent = p.name;
+  if (priceEl) {
+    const sell = typeof p.price === 'number' ? p.price : parseFloat(p.price||0);
+    const old = p.priceOld ? `<span class="original">${p.priceOld.toFixed ? p.priceOld.toFixed(2) : p.priceOld} €</span>` : '';
+    priceEl.innerHTML = `${sell.toFixed(2).replace('.',',')} €${old}`;
+  }
+  // Stock des tailles
+  const sizeEl = document.getElementById('sizeOptions');
+  if (sizeEl && p.stock) {
+    sizeEl.innerHTML = Object.entries(p.stock).map(([s, qty]) =>
+      `<button class="size-opt ${s==='M'?'active':''} ${qty===0?'oos':''}" onclick="selectSize('${s}',${qty})">${s}</button>`
+    ).join('');
+  }
+  // Couleurs
+  const colorEl = document.getElementById('colorOptions');
+  if (colorEl && p.colors) {
+    colorEl.innerHTML = p.colors.map((c,i) =>
+      `<div class="color-opt ${i===0?'active':''}" style="background:${c}" onclick="selectColor(${i})" title="${c}"></div>`
+    ).join('');
+  }
+  // Image principale
+  const mainImg = document.getElementById('mainImg');
+  if (mainImg) mainImg.textContent = p.emoji || '👕';
+  showPage('product');
+}
+
+// ── Dashboard admin — charger les stats depuis /api/admin-stats ─
+async function loadAdminStats() {
+  const adminKey = API_CONFIG.adminKey;
+  if (!adminKey) {
+    showToast('⚠️ Clé admin manquante — renseignez-la dans la configuration');
+    renderDashboardFallback();
+    return;
+  }
+  try {
+    const res = await fetch('/api/admin-stats', { headers: { 'x-admin-key': adminKey } });
+    if (!res.ok) { showToast('✗ Erreur stats: ' + res.status); renderDashboardFallback(); return; }
+    const d = await res.json();
+
+    // Stats cards
+    document.getElementById('dash-revenue').textContent = (d.revenue_30d || 0).toFixed(2).replace('.',',') + ' €';
+    document.getElementById('dash-revenue-sub').textContent = d.orders_30d + ' commandes ce mois';
+    document.getElementById('dash-revenue-sub').className = 'stat-sub up';
+
+    document.getElementById('dash-margin').textContent = (d.margin_catalog || 0).toFixed(2).replace('.',',') + ' €';
+    document.getElementById('dash-margin-sub').textContent = 'marge catalogue estimée';
+    document.getElementById('dash-margin-sub').className = 'stat-sub up';
+
+    document.getElementById('dash-orders').textContent = d.orders_30d || 0;
+    const pending = (d.orders_by_status || {});
+    document.getElementById('dash-orders-sub').textContent =
+      (pending.paid || 0) + ' en attente · ' + (pending.shipped || 0) + ' expédiées';
+
+    const oosCount = (d.out_of_stock || []).length;
+    document.getElementById('dash-oos').textContent = oosCount;
+    document.getElementById('dash-oos-sub').textContent =
+      (d.stock_alerts_total || 0) + ' clients en attente de notif';
+
+    // Commandes récentes
+    const recentOrders = d.recent_orders || [];
+    const statusLabels = { paid:'En attente', shipped:'Expédiée', delivered:'Livrée', pending:'En attente', cancelled:'Annulée', handover:'Remis' };
+    const statusClasses = { paid:'pending', shipped:'shipped', delivered:'delivered', pending:'pending', cancelled:'oos', handover:'handover' };
+    document.getElementById('dash-recent-orders').innerHTML = recentOrders.length
+      ? recentOrders.slice(0,5).map(o => `<tr>
+          <td>#${o.ref || o.id}</td>
+          <td>${o.customer_email ? o.customer_email.replace(/(.{2}).+(@.+)/,'$1…$2') : '—'}</td>
+          <td>${parseFloat(o.total||0).toFixed(2).replace('.',',')} €</td>
+          <td>${o.shipping_mode || '—'}</td>
+          <td><span class="status-badge ${statusClasses[o.status]||'pending'}">${statusLabels[o.status]||o.status}</span></td>
+        </tr>`).join('')
+      : '<tr><td colspan="5" style="color:#555;text-align:center;padding:1.5rem">Aucune commande</td></tr>';
+
+    // Alertes stock
+    const alerts = d.stock_alerts_by_product || [];
+    const alertTitle = document.getElementById('dash-alerts-title');
+    if (alertTitle) alertTitle.textContent = `Alertes retour en stock (${d.stock_alerts_total || 0} clients)`;
+    const notifBtn = document.getElementById('dash-notif-btn');
+    if (notifBtn) notifBtn.style.display = alerts.length ? 'inline-flex' : 'none';
+    document.getElementById('dash-alerts-tbody').innerHTML = alerts.length
+      ? alerts.map(a => `<tr>
+          <td>${a.product_name || a.product_id}</td>
+          <td>${a.count}</td>
+          <td><button class="admin-btn outline" style="font-size:.7rem;padding:3px 8px"
+            onclick="sendStockNotifications('${a.product_id}','${(a.product_name||'').replace(/'/g,"\'")}')">
+            Notifier →
+          </button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="3" style="color:#555;text-align:center;padding:1.5rem">Aucune alerte en attente</td></tr>';
+
+    // Stock faible
+    const lowStock = d.low_stock || [];
+    document.getElementById('dash-lowstock-tbody').innerHTML = lowStock.length
+      ? lowStock.map(p => `<tr>
+          <td>${p.name}</td>
+          <td style="color:#888">${p.category||'—'}</td>
+          <td style="color:#ba7517;font-weight:500">${p.total_stock}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="3" style="color:#2d7a4f;text-align:center;padding:1.5rem">✓ Tous les stocks sont bons</td></tr>';
+
+  } catch(e) {
+    console.error('loadAdminStats error:', e);
+    showToast('✗ Impossible de charger les stats: ' + e.message);
+    renderDashboardFallback();
+  }
+}
+
+function renderDashboardFallback() {
+  ['dash-revenue','dash-margin','dash-orders','dash-oos'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+  ['dash-revenue-sub','dash-margin-sub','dash-orders-sub','dash-oos-sub'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = 'Configurez la clé admin';
+  });
+}
+
+// ── Admin commandes — charger + filtrer ───────────────────────
+let allAdminOrders = [];
+async function loadAdminOrders() {
+  const adminKey = API_CONFIG.adminKey;
+  if (!adminKey) { showToast('⚠️ Clé admin requise'); return; }
+  document.getElementById('admin-orders-tbody').innerHTML =
+    '<tr><td colspan="6" style="color:#555;text-align:center;padding:2rem">Chargement…</td></tr>';
+  try {
+    const res = await fetch('/api/admin-stats', { headers: { 'x-admin-key': adminKey } });
+    const d = await res.json();
+    allAdminOrders = (d.recent_orders || []).concat(d.orders_pending || []);
+    // Dédoublonner par id
+    const seen = new Set();
+    allAdminOrders = allAdminOrders.filter(o => { if (seen.has(o.id)) return false; seen.add(o.id); return true; });
+    filterAdminOrders('all');
+  } catch(e) {
+    document.getElementById('admin-orders-tbody').innerHTML =
+      '<tr><td colspan="6" style="color:#a32d2d;text-align:center;padding:2rem">Erreur: ' + e.message + '</td></tr>';
+  }
+}
+
+function filterAdminOrders(status) {
+  const orders = status === 'all' ? allAdminOrders : allAdminOrders.filter(o => o.status === status);
+  const statusLabels = { paid:'En attente', shipped:'Expédiée', delivered:'Livrée', pending:'En attente', cancelled:'Annulée', handover:'Remis' };
+  const statusClasses = { paid:'pending', shipped:'shipped', delivered:'delivered', pending:'pending', cancelled:'oos', handover:'handover' };
+  const shippingLabels = { domicile:'Colissimo', relais:'Point relais', 'main-propre':'Main propre' };
+  const label = document.getElementById('orders-count-label');
+  if (label) label.textContent = orders.length + ' commande' + (orders.length>1?'s':'');
+  document.getElementById('admin-orders-tbody').innerHTML = orders.length
+    ? orders.map(o => `<tr>
+        <td>#${o.ref || o.id}</td>
+        <td>${o.customer_email ? o.customer_email.replace(/(.{2}).+(@.+)/,'$1…$2') : '—'}</td>
+        <td>${parseFloat(o.total||0).toFixed(2).replace('.',',')} €</td>
+        <td>${shippingLabels[o.shipping_mode] || o.shipping_mode || '—'}</td>
+        <td><span class="status-badge ${statusClasses[o.status]||'pending'}">${statusLabels[o.status]||o.status}</span></td>
+        <td><button class="admin-btn outline" style="font-size:.7rem;padding:3px 8px"
+          onclick="markOrderShipped('${o.id}','${o.ref||o.id}')">Expédier</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" style="color:#555;text-align:center;padding:2rem">Aucune commande</td></tr>';
+}
+
+async function markOrderShipped(orderId, ref) {
+  showToast('🚚 Commande ' + ref + ' marquée expédiée');
+  // Ici on appellerait PATCH /api/orders si l'endpoint existait
+}
+
+function exportOrdersCSV() {
+  if (!allAdminOrders.length) { showToast('⚠️ Chargez d'abord les commandes'); return; }
+  const rows = [['Ref','Email','Total','Livraison','Statut','Date']];
+  allAdminOrders.forEach(o => rows.push([
+    o.ref||o.id, o.customer_email||'', o.total||'', o.shipping_mode||'', o.status||'',
+    o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR') : ''
+  ]));
+  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'fansfr-commandes-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// ── Déclencher toutes les notifications stock ─────────────────
+async function triggerAllStockNotifications() {
+  showToast('📧 Envoi des notifications en cours…');
+  const adminKey = API_CONFIG.adminKey;
+  try {
+    const res = await fetch('/api/admin-stats', { headers: { 'x-admin-key': adminKey } });
+    const d = await res.json();
+    let total = 0;
+    for (const a of (d.stock_alerts_by_product || [])) {
+      await sendStockNotifications(a.product_id, a.product_name);
+      total += a.count;
+    }
+    showToast('✓ ' + total + ' notification(s) envoyée(s)');
+    loadAdminStats();
+  } catch(e) {
+    showToast('✗ Erreur: ' + e.message);
+  }
+}
+
+// ── Ouvrir l'éditeur produit avec les données réelles ─────────
+function openProductEditor(productId) {
+  // Chercher le produit dans PRODUCTS local
+  const p = PRODUCTS.find(x => x.id == productId) || {};
+  if (document.getElementById('edit-name')) {
+    document.getElementById('edit-name').value = p.name || '';
+    document.getElementById('edit-price').value = p.price || p.price_sell || '';
+    document.getElementById('edit-buy-price').value = p.buyPrice || p.price_buy || '';
+  }
+  openModal('productEditorModal');
+  updateMarginCalc();
+}
+
+// ── Brancher switchAdminTab sur loadAdminOrders ────────────────
+const _origSwitchAdminTab = switchAdminTab;
+function switchAdminTab(btn, tabId) {
+  _origSwitchAdminTab(btn, tabId);
+  if (tabId === 'admin-orders') loadAdminOrders();
+}
+
 function init() {
   restoreSession();
   loadApiConfigInputs();
@@ -2701,9 +2993,10 @@ function init() {
   if (!localStorage.getItem('fansfr_cookies')) {
     setTimeout(() => document.getElementById('cookieBanner').classList.add('show'), 1200);
   }
-  // Charger le catalogue Supabase si configuré
-  // Charger le catalogue depuis /api/products (toujours actif si déployé sur Vercel)
+  // Charger le catalogue depuis /api/products
   setTimeout(() => loadProducts(), 500);
+  // Charger les stats admin si la clé est déjà configurée
+  if (API_CONFIG.adminKey) setTimeout(() => loadAdminStats(), 800);
 }
 
 init();
