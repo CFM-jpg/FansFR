@@ -1955,7 +1955,7 @@ async function sendStockNotifications(productId, productName) {
     showToast(`📧 ${data.sent || 0} email(s) de notification envoyé(s)`);
   } catch(e) {
     console.error('sendStockNotifications error:', e);
-    showToast('✗ Erreur lors de l'envoi des notifications');
+    showToast('✗ Erreur lors de l\'envoi des notifications');
   }
 }
 
@@ -2925,7 +2925,7 @@ async function markOrderShipped(orderId, ref) {
 }
 
 function exportOrdersCSV() {
-  if (!allAdminOrders.length) { showToast('⚠️ Chargez d'abord les commandes'); return; }
+  if (!allAdminOrders.length) { showToast('⚠️ Chargez d\'abord les commandes'); return; }
   const rows = [['Ref','Email','Total','Livraison','Statut','Date']];
   allAdminOrders.forEach(o => rows.push([
     o.ref||o.id, o.customer_email||'', o.total||'', o.shipping_mode||'', o.status||'',
